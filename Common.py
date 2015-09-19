@@ -1,6 +1,8 @@
-def read_password(filename = 'user-pass.txt'):
-    with open('user_pass.txt','r') as f:
-        a = f.read()
-        print a
+import json
 
-read_password()
+def read_config(fname = "config.json"):
+    with open("config.json") as conf:
+        configuration = json.load(conf)
+    return configuration
+
+print read_config()
