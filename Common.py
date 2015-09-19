@@ -5,4 +5,3 @@ def read_config(fname = "config.json"):
         configuration = json.load(conf)
     return configuration
 
-print read_config()
