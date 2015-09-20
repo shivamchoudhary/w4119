@@ -1,0 +1,2 @@
+directive:
+	python Server.py
