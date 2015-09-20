@@ -10,9 +10,11 @@ class CreateServer(object):
     Creates a server at IP and specifed port.
     """
     def __init__(self, host, port):
+        self.tries = 0
         self.host = host
         self.port = port
-        self.userpasswd = Common.load_password(configuration['location']['passwdf'])
+        self.userpasswd = Common.load_password(
+                configuration['location']['passwdf'])
         server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         try:
             server.bind((host,port))
@@ -25,13 +27,20 @@ class CreateServer(object):
             conn,addr = server.accept()
             print "Connected to ",addr
             self.client(conn)
+            conn.close()
 
     def client(self,conn):
         conn.send("Welcome to Simple Chat Server Please type your user name \n")
         conn.send("username:")
         username = conn.recv(1024)
+        username = username.rstrip()
         conn.send("password")
         password = conn.recv(1024)
+        if self.userpasswd[username] == password:
+            print 'Authentication Successful'
+        else:
+            print "Unsuccessful"
+        conn.close()
 a = CreateServer('127.0.0.1',8080)
 
 
