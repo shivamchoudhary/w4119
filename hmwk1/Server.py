@@ -1,47 +1,57 @@
 import sys
 import socket
 import Common
-from thread import *
+import thread
+import argparse
 
 configuration = Common.read_config()
 
 class CreateServer(object):
     """
-    Creates a server at IP and specifed port.
+    Creates a server on localhost at specifed port.
     """
-    def __init__(self, host, port):
-        self.tries = 0
-        self.host = host
+    def __init__(self, port):
+        """
+        host can be specified in config.json file
+        """
+        self.host = configuration['host']
         self.port = port
         self.userpasswd = Common.load_password(
                 configuration['location']['passwdf'])
-        server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            server.bind((host,port))
-        except socket.error as e:
-            print ("Binding failed. Error:%s",e)
+            serversocket.bind((self.host, self.port))
+        except socket.error as error:
+            print ("Binding failed. Error:%s",error)
             sys.exit()
-        server.listen(10)
+        serversocket.listen(5)
         print "Server Running"
         while 1:
-            conn,addr = server.accept()
-            print "Connected to ",addr
-            self.client(conn)
-            conn.close()
+            try:
+                (clientsocket,address) = serversocket.accept()
+                print "Connected to ",address
+                thread.start_new_thread(handler,(clientsocket,address))
+            except KeyboardInterrupt:
+                serversocket.close()
+   
+def handler(clientsock,addr):
+    while 1:
+        clientsock.send("Username:")
+        username = clientsock.recv(1024)
+        clientsock.send("Password:")
+        password  = clientsock.recv(1024)
+    clientsock.close()
 
-    def client(self,conn):
-        conn.send("Welcome to Simple Chat Server Please type your user name \n")
-        conn.send("username:")
-        username = conn.recv(1024)
-        username = username.rstrip()
-        conn.send("password")
-        password = conn.recv(1024)
-        if self.userpasswd[username] == password:
-            print 'Authentication Successful'
-        else:
-            print "Unsuccessful"
-        conn.close()
-a = CreateServer('127.0.0.1',8080)
+def main():
+    try:
+        port = int(sys.argv[1])
+    except IndexError:
+        print "Please specify a port number to bind the server."
+        sys.exit()
+    CreateServer(port)
+if __name__=="__main__":
+    main()
+
 
 
 
