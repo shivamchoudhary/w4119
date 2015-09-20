@@ -1,0 +1,9 @@
+{
+        "location" : {
+                "passwdf":"user_pass.txt"
+                },
+        "commands" : [
+                "whoelse","wholasthr","wholastmin","logout"
+        ]
+
+       }
