@@ -2,10 +2,11 @@ import sys
 import socket
 import Common
 import thread
-import argparse
+import os
 
 configuration = Common.read_config()
 userpasswd = Common.load_password(configuration['location']['passwdf'])
+
 class CreateServer(object):
     """
     Creates a server on localhost at specifed port.
@@ -23,49 +24,33 @@ class CreateServer(object):
             serversocket.bind((self.host, self.port))
         except socket.error as error:
             print ("Binding failed. Error:%s",error)
-            sys.exit()
+            sys.exit(0)
         serversocket.listen(5)
+        while True:
+            (clientsocket, address)  = serversocket.accept()
+            print "Accepted from ",clientsocket
         print "Server Running"
-        while 1:
-            try:
-                (clientsocket,address) = serversocket.accept()
-                print "Connected to ",address
-                thread.start_new_thread(handler,(clientsocket,address))
-            except KeyboardInterrupt:
-                serversocket.shutdown()
-                serversocket.close()
-   
-def handler(clientsock,addr):
-    while 1:
-        clientsock.send("Username:")
-        username = clientsock.recv(1024)
-        clientsock.send("Password:")
-        password  = clientsock.recv(1024)
-        if authentication(username,password):
-            clientsock.send("$")
-    clientsock.shutdown()
-    clientsock.close()
-
-def authentication(username,password):
-    try:
-        if userpasswd[username] == password:
-            print "Welcome %s to Simple Chat Server"
-            return True
-        else:
-            print "Authentication Failed!! try Again"
-            return False
-    except KeyError:
-        return False
 
 def main():
+    """
+    Main function creates a server on the specified port and handles
+    KeyboardInterrupt.
+    """
     try:
         port = int(sys.argv[1])
     except IndexError:
         print "Please specify a port number to bind the server."
         sys.exit()
     CreateServer(port)
-if __name__=="__main__":
-    main()
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print "Shutting Down Bye!!"
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)
 
 
 
