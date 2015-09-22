@@ -5,8 +5,9 @@
         "commands" : [
                 "whoelse","wholasthr","wholastmin","logout"
         ],
-        "BLOCK_TIME":50,
+        "BLOCK_TIME":60,
         "TIME_OUT" :30,
-        "host":"127.0.0.1"
+        "host":"127.0.0.1",
+        "NUMFAILATT":3
 
 }

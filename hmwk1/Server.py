@@ -7,7 +7,9 @@ import os
 
 configuration = Common.read_config()
 userpasswd = Common.load_password(configuration['location']['passwdf'])
-
+block_time = configuration['BLOCK_TIME']
+numfailattempt = configuration['NUMFAILATT']
+blocked_user = []
 class CreateServer(object):
     """
     Creates a server on localhost at specifed port.
