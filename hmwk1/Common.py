@@ -1,5 +1,6 @@
 import json
 
+
 def read_config(fname = "config.json"):
     with open("config.json") as conf:
         configuration = json.load(conf)
@@ -13,6 +14,5 @@ def load_password(fname):
             vals = val.split(" ")
             user_passdict[vals[0]] = vals[1]
         return user_passdict
-
 
 

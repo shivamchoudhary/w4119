@@ -5,7 +5,7 @@ import thread
 import argparse
 
 configuration = Common.read_config()
-
+userpasswd = Common.load_password(configuration['location']['passwdf'])
 class CreateServer(object):
     """
     Creates a server on localhost at specifed port.
@@ -32,6 +32,7 @@ class CreateServer(object):
                 print "Connected to ",address
                 thread.start_new_thread(handler,(clientsocket,address))
             except KeyboardInterrupt:
+                serversocket.shutdown()
                 serversocket.close()
    
 def handler(clientsock,addr):
@@ -40,7 +41,21 @@ def handler(clientsock,addr):
         username = clientsock.recv(1024)
         clientsock.send("Password:")
         password  = clientsock.recv(1024)
+        if authentication(username,password):
+            clientsock.send("$")
+    clientsock.shutdown()
     clientsock.close()
+
+def authentication(username,password):
+    try:
+        if userpasswd[username] == password:
+            print "Welcome %s to Simple Chat Server"
+            return True
+        else:
+            print "Authentication Failed!! try Again"
+            return False
+    except KeyError:
+        return False
 
 def main():
     try:
