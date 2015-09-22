@@ -34,6 +34,7 @@ class CreateServer(object):
                     (clientsocket, clientaddress))
         print "Server Running"
 
+
 def main():
     """
     Main function creates a server on the specified port and handles
@@ -47,16 +48,36 @@ def main():
     CreateServer(port)
 
 def handlerequests(clientsocket, clientaddr):
-    while True:
-        try:
-            clientsocket.send("username:")
-            username = clientsocket.recv(1024)
-            clientsocket.send("password:")
-            password = clientsocket.recv(1024)
-        except socket.error:
-            print "Dropped the connection"
-            break
-    clientsocket.close()
+    try:
+        tries = 1
+        clientsocket.send("username:")
+        username = clientsocket.recv(1024)
+        username = username.rstrip()
+        clientsocket.send("password:")
+        password = clientsocket.recv(1024)
+        while tries <=3:
+            if authenticate(username,password):
+                clientsocket.send("Welcome to Simple Chat Server!!")
+                break;
+            else:
+                clientsocket.send("**Authentication Unsuccessful** Try Again\n")
+                clientsocket.send("password:")
+                password = clientsocket.recv(1024)
+                authenticate(username,password)
+                tries +=1
+    except socket.error:
+        print "Dropped the connection"
+    # clientsocket.close()
+
+def authenticate(username,password):
+    password = password.strip()
+    reqpassword = userpasswd[username]
+    if reqpassword == password:
+        print "Authentication Successful"
+        return True
+    else:
+        print "Authentication Unsuccessful"
+        return False
 if __name__ == "__main__":
     try:
         main()
