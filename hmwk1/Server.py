@@ -27,8 +27,10 @@ class CreateServer(object):
             sys.exit(0)
         serversocket.listen(5)
         while True:
-            (clientsocket, address)  = serversocket.accept()
-            print "Accepted from ",clientsocket
+            (clientsocket, clientaddress)  = serversocket.accept()
+            print "Socket %s Address %s", clientsocket, clientaddress
+            thread.start_new_thread(handlerequests, 
+                    (clientsocket, clientaddress))
         print "Server Running"
 
 def main():
@@ -42,6 +44,18 @@ def main():
         print "Please specify a port number to bind the server."
         sys.exit()
     CreateServer(port)
+
+def handlerequests(clientsocket, clientaddr):
+    while True:
+        try:
+            clientsocket.send("username:")
+            username = clientsocket.recv(1024)
+            clientsocket.send("password:")
+            password = clientsocket.recv(1024)
+        except socket.error:
+            print "Dropped the connection"
+            break
+    clientsocket.close()
 if __name__ == "__main__":
     try:
         main()
