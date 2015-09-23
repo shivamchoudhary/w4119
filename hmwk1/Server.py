@@ -4,6 +4,7 @@ import socket
 import Common
 import thread
 import os
+import threading
 
 configuration = Common.read_config()
 userpasswd = Common.load_password(configuration['location']['passwdf'])
@@ -50,36 +51,37 @@ def main():
     CreateServer(port)
 
 def handlerequests(clientsocket, clientaddr):
-    try:
-        tries = 1
+    run = True
+    while run:
         clientsocket.send("username:")
         username = clientsocket.recv(1024)
-        username = username.rstrip()
         clientsocket.send("password:")
         password = clientsocket.recv(1024)
-        while tries <=3:
-            if authenticate(username,password):
-                clientsocket.send("Welcome to Simple Chat Server!!")
-                break;
-            else:
-                clientsocket.send("**Authentication Unsuccessful** Try Again\n")
-                clientsocket.send("password:")
-                password = clientsocket.recv(1024)
-                authenticate(username,password)
-                tries +=1
-    except socket.error:
-        print "Dropped the connection"
-    # clientsocket.close()
+        if authenticate(username,password):
+            clientsocket.send("Welcome to the Chat Server\n")
+            run = False
+            commands(clientsocket)
+        else:
+            clientsocket.send("**Authentication Failed**\n")
+            clientsocket.send("password:")
+    clientsocket.close()
+
+
 
 def authenticate(username,password):
     password = password.strip()
+    username = username.strip()
     reqpassword = userpasswd[username]
+    reqpassword = reqpassword.strip()
     if reqpassword == password:
         print "Authentication Successful"
         return True
     else:
         print "Authentication Unsuccessful"
         return False
+def commands(clientsocket):
+    clientsocket.send("Type help for the list of commands available\n$")
+    input = clientsocket.recv(1024)
 if __name__ == "__main__":
     try:
         main()
