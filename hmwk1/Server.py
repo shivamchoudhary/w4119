@@ -5,12 +5,17 @@ import Common
 import thread
 import os
 import threading
+import time
 
 configuration = Common.read_config()
 userpasswd = Common.load_password(configuration['location']['passwdf'])
 block_time = configuration['BLOCK_TIME']
 numfailattempt = configuration['NUMFAILATT']
 blocked_user = []
+logged_user  = {}
+auth_users = []
+return_status = configuration["return_status"]
+
 class CreateServer(object):
     """
     Creates a server on localhost at specifed port.
@@ -30,12 +35,12 @@ class CreateServer(object):
             print ("Binding failed. Error:%s",error)
             sys.exit(0)
         serversocket.listen(5)
+        print "Server Running"
         while True:
             (clientsocket, clientaddress)  = serversocket.accept()
-            print "Socket %s Address %s", clientsocket, clientaddress
+            print logged_user
             thread.start_new_thread(handlerequests, 
                     (clientsocket, clientaddress))
-        print "Server Running"
 
 
 def main():
@@ -54,34 +59,39 @@ def handlerequests(clientsocket, clientaddr):
     run = True
     while run:
         clientsocket.send("username:")
-        username = clientsocket.recv(1024)
+        username = clientsocket.recv(1024).strip()
         clientsocket.send("password:")
-        password = clientsocket.recv(1024)
+        password = clientsocket.recv(1024).strip()
         if authenticate(username,password):
-            clientsocket.send("Welcome to the Chat Server\n")
+            clientsocket.send("Welcome to Simple Chat Server\n")
             run = False
-            commands(clientsocket)
-        else:
-            clientsocket.send("**Authentication Failed**\n")
-            clientsocket.send("password:")
-    clientsocket.close()
-
-
+            logged_user[time.time()] = username.strip()
+            auth_users.append(username)
+            commands(clientsocket,username)
 
 def authenticate(username,password):
-    password = password.strip()
-    username = username.strip()
-    reqpassword = userpasswd[username]
-    reqpassword = reqpassword.strip()
-    if reqpassword == password:
-        print "Authentication Successful"
-        return True
+    if username not in auth_users:
+        password = password.strip()
+        username = username.strip()
+        reqpassword = userpasswd[username]
+        reqpassword = reqpassword.strip()
+        if reqpassword == password:
+            print "Authentication Successful"
+            return True
+        else:
+            print "Authentication Unsuccessful"
+            return False
     else:
-        print "Authentication Unsuccessful"
-        return False
-def commands(clientsocket):
+        print "user already logged in"
+        return 2
+def commands(clientsocket,username):
     clientsocket.send("Type help for the list of commands available\n$")
     input = clientsocket.recv(1024)
+    input = input.strip()
+    if input =="logout":
+        auth_users.remove(username)
+        clientsocket.close()
+
 if __name__ == "__main__":
     try:
         main()
