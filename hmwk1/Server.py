@@ -2,11 +2,16 @@
 import sys
 import socket
 import Common
-import thread
 import os
 import threading
 import time
-
+import logging
+logger = logging.getLogger()
+FORMAT = "[%(levelname)s:%(threadName)-10s:%(funcName)20s] %(message)s" 
+logging.basicConfig(format=FORMAT)
+logger.setLevel(logging.DEBUG)
+consoleHandler = logging.StreamHandler()
+logger.addHandler(consoleHandler)
 configuration = Common.read_config()
 userpasswd = Common.load_password(configuration['location']['passwdf'])
 block_time = configuration['BLOCK_TIME']
@@ -15,6 +20,7 @@ blocked_user = []
 logged_user  = {}
 auth_users = []
 return_status = configuration["return_status"]
+
 class CreateServer(object):
     """
     Creates a server on localhost at specifed port.
@@ -31,16 +37,18 @@ class CreateServer(object):
         try:
             serversocket.bind((self.host, self.port))
         except socket.error as error:
-            print ("Binding failed. Error:%s",error)
+            logging.critical("Socket binding failed with error %s", error)
             sys.exit(0)
         serversocket.listen(5)
-        print "Server Running"
+        logger.debug("Server Running")
         while True:
-            (clientsocket, clientaddress)  = serversocket.accept()
-            print auth_users
-            thread.start_new_thread(handlerequests, 
-                    (clientsocket, clientaddress))
-
+            (clientsocket, clientaddress) = serversocket.accept()
+            logger.info("Starting New Thread for IP:%s and socket %s",
+                    clientaddress, clientsocket)
+            thread = threading.Thread(target=handlerequests, args=(clientsocket,
+                clientaddress))
+            thread.deamon = True
+            thread.start()
 
 def main():
     """
@@ -55,50 +63,70 @@ def main():
     CreateServer(port)
 
 def handlerequests(clientsocket, clientaddr):
-    run = True
-    while run:
+    time_run =1
+    logging.info("Current Thread %s",threading.currentThread())
+    while (time_run<=3):
         clientsocket.send("username:")
         username = clientsocket.recv(1024).strip()
         clientsocket.send("password:")
         password = clientsocket.recv(1024).strip()
-        if authenticate(username,password):
+        auth_status = authenticate(username,password)
+        if auth_status ==0:
+            time_run+=1
+            break;
+        if auth_status ==1:
             clientsocket.send("Welcome to Simple Chat Server\n")
-            run = False
+            time_run = 4
             logged_user[time.time()] = username.strip()
             auth_users.append(username)
-            c = Commands(clientsocket,username,auth_users)
-            commands(clientsocket,username,c)
-
-def authenticate(username,password):
+            c = Commands(clientsocket, username, auth_users)
+            commands(clientsocket, username, c)
+    
+    if time_run ==3:
+        clientsocket.close()
+        blocked_user.append(username)
+        
+def authenticate(username, password):
     if username not in auth_users:
         password = password.strip()
         username = username.strip()
         reqpassword = userpasswd[username]
         reqpassword = reqpassword.strip()
         if reqpassword == password:
-            print "Authentication Successful"
-            return True
+            logging.debug("Authentication for %s Successful",username)
+            return 1
         else:
-            print "Authentication Unsuccessful"
-            return False
+            logging.debug("Authentication for %s Unsuccessful",username)
+            return 2
     else:
-        print "user already logged in"
+        logger.debug("User %s already logged in",username)
         return 2
-def commands(clientsocket,username,c):
+def commands(clientsocket, username, c):
+    running = True
     clientsocket.send("Type help for the list of commands available\n$")
-    input = clientsocket.recv(1024)
-    input = input.strip()
-    if input =="logout":
-        c.logout()
-    if input =="whoelse":
-        c.whoelse()
+    print "Execute"
+    while running:
+        clientsocket.send("$")
+        input = clientsocket.recv(1024)
+        input = input.strip()
+        if input == "logout":
+            c.logout()
+            running = False
+        if input == "whoelse":
+            c.whoelse()
 
 
 class Commands(object):
+    """
+    Commands supported for the Chat server.
+    """
     def __init__(self,clientsocket,username,auth_users,**kwargs):
         self.clientsocket = clientsocket
         self.username = username
         self.auth_users = auth_users
+    # def help(self):
+        # for command in command_list:
+            # self.clientsocket.send()
     def cleanup(self):
         self.auth_users.remove(self.username)
         self.clientsocket.close()
@@ -107,6 +135,12 @@ class Commands(object):
     def whoelse(self):
         for values in auth_users:
             self.clientsocket.send(values)
+    def wholast(self,time):
+        pass
+    def broadcast_message(self,message):
+        pass
+    def message(self,username):
+        pass
 
 if __name__ == "__main__":
     try:
