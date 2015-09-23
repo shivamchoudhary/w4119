@@ -15,7 +15,6 @@ blocked_user = []
 logged_user  = {}
 auth_users = []
 return_status = configuration["return_status"]
-
 class CreateServer(object):
     """
     Creates a server on localhost at specifed port.
@@ -38,7 +37,7 @@ class CreateServer(object):
         print "Server Running"
         while True:
             (clientsocket, clientaddress)  = serversocket.accept()
-            print logged_user
+            print auth_users
             thread.start_new_thread(handlerequests, 
                     (clientsocket, clientaddress))
 
@@ -67,7 +66,8 @@ def handlerequests(clientsocket, clientaddr):
             run = False
             logged_user[time.time()] = username.strip()
             auth_users.append(username)
-            commands(clientsocket,username)
+            c = Commands(clientsocket,username,auth_users)
+            commands(clientsocket,username,c)
 
 def authenticate(username,password):
     if username not in auth_users:
@@ -84,13 +84,29 @@ def authenticate(username,password):
     else:
         print "user already logged in"
         return 2
-def commands(clientsocket,username):
+def commands(clientsocket,username,c):
     clientsocket.send("Type help for the list of commands available\n$")
     input = clientsocket.recv(1024)
     input = input.strip()
     if input =="logout":
-        auth_users.remove(username)
-        clientsocket.close()
+        c.logout()
+    if input =="whoelse":
+        c.whoelse()
+
+
+class Commands(object):
+    def __init__(self,clientsocket,username,auth_users,**kwargs):
+        self.clientsocket = clientsocket
+        self.username = username
+        self.auth_users = auth_users
+    def cleanup(self):
+        self.auth_users.remove(self.username)
+        self.clientsocket.close()
+    def logout(self):
+        self.cleanup()
+    def whoelse(self):
+        for values in auth_users:
+            self.clientsocket.send(values)
 
 if __name__ == "__main__":
     try:
