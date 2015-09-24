@@ -19,6 +19,8 @@ numfailattempt = configuration['NUMFAILATT']
 blocked_user = []
 logged_user  = {}
 auth_users = []
+client_sockets =[]
+user_clientmap = {}
 return_status = configuration["return_status"]
 
 class CreateServer(object):
@@ -63,29 +65,29 @@ def main():
     CreateServer(port)
 
 def handlerequests(clientsocket, clientaddr):
-    time_run =1
-    logging.info("Current Thread %s",threading.currentThread())
-    while (time_run<=3):
+    """
+    Threading for handling requests.
+    """
+    run = True
+    logging.info("Current Thread %s", threading.currentThread())
+    while run:
         clientsocket.send("username:")
         username = clientsocket.recv(1024).strip()
         clientsocket.send("password:")
         password = clientsocket.recv(1024).strip()
-        auth_status = authenticate(username,password)
-        if auth_status ==0:
-            time_run+=1
-            break;
-        if auth_status ==1:
+        auth_status = authenticate(username, password)
+        if auth_status == 0:
+            run = True
+        if auth_status == 1:
+            client_sockets.append(clientsocket)
             clientsocket.send("Welcome to Simple Chat Server\n")
-            time_run = 4
+            run = False
             logged_user[time.time()] = username.strip()
             auth_users.append(username)
+            user_clientmap[username] = clientsocket
             c = Commands(clientsocket, username, auth_users)
             commands(clientsocket, username, c)
     
-    if time_run ==3:
-        clientsocket.close()
-        blocked_user.append(username)
-        
 def authenticate(username, password):
     if username not in auth_users:
         password = password.strip()
@@ -93,54 +95,68 @@ def authenticate(username, password):
         reqpassword = userpasswd[username]
         reqpassword = reqpassword.strip()
         if reqpassword == password:
-            logging.debug("Authentication for %s Successful",username)
+            logging.debug("Authentication for %s Successful", username)
             return 1
         else:
-            logging.debug("Authentication for %s Unsuccessful",username)
+            logging.debug("Authentication for %s Unsuccessful", username)
             return 2
     else:
-        logger.debug("User %s already logged in",username)
+        logger.debug("User %s already logged in", username)
         return 2
+
 def commands(clientsocket, username, c):
     running = True
-    clientsocket.send("Type help for the list of commands available\n$")
-    print "Execute"
+    clientsocket.send("Type help for the list of commands available\n")
     while running:
         clientsocket.send("$")
         input = clientsocket.recv(1024)
         input = input.strip()
-        if input == "logout":
+        input = input.split()
+        if input[0] == "logout":
             c.logout()
             running = False
-        if input == "whoelse":
+        if input[0] == "whoelse":
             c.whoelse()
-
+        if input[0] == "broadcast" and input[1] == "message":
+            c.broadcast_message(input[1])
+        if input[0] == "message":
+            reciever = input[1]
+            message = input[2]
+            c.message(reciever,message,username)
 
 class Commands(object):
     """
     Commands supported for the Chat server.
     """
-    def __init__(self,clientsocket,username,auth_users,**kwargs):
+    def __init__(self, clientsocket, username, auth_users, **kwargs):
         self.clientsocket = clientsocket
         self.username = username
         self.auth_users = auth_users
-    # def help(self):
-        # for command in command_list:
-            # self.clientsocket.send()
+    
     def cleanup(self):
         self.auth_users.remove(self.username)
         self.clientsocket.close()
+    
     def logout(self):
+        logger.debug("USER:%s is logging out",self.username)
         self.cleanup()
+    
     def whoelse(self):
         for values in auth_users:
             self.clientsocket.send(values)
-    def wholast(self,time):
+            self.clientsocket.send("\n")
+    
+    def wholast(self, time):
         pass
+    
     def broadcast_message(self,message):
-        pass
-    def message(self,username):
-        pass
+        for client in client_sockets:
+            client.send(message)
+    
+    def message(self,reciever,message,sender):
+        reciever_clientsocket = user_clientmap[reciever]
+        message = sender+":"+message
+        reciever_clientsocket.send(message)
 
 if __name__ == "__main__":
     try:
