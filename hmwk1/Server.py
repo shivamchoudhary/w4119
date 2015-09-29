@@ -71,9 +71,10 @@ def handlerequests(clientsocket, clientaddr):
     run = True
     logging.info("Current Thread %s", threading.currentThread())
     while run:
-        clientsocket.send("username:")
-        username = clientsocket.recv(1024).strip()
-        clientsocket.send("password:")
+        # clientsocket.send("username:")
+        username= clientsocket.recv(1024).strip()
+        logging.debug("username is %s",username)
+        # clientsocket.send("password:")
         password = clientsocket.recv(1024).strip()
         auth_status = authenticate(username, password)
         if auth_status == 0:

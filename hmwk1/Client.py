@@ -1,17 +1,19 @@
 import sys
 import os
 import socket
-def connect(ip,port):
-    socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    server_address = (ip,port)
-    sock.connect(server_address)
 
-
-
-
-
-
-
+def connect(ip, port):
+    try:
+        serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_address = (ip, port)
+        serversocket.connect(server_address)
+        while True:
+            username  = raw_input("username:")
+            serversocket.send(username)
+            password  = raw_input("password:")
+            serversocket.send(password)
+    finally:
+        pass
 
 def main():
     try:
@@ -19,6 +21,7 @@ def main():
         port = int(sys.argv[2])
     except IndexError:
         print "Please specify <server IP_address> <server_port_no>"
+    connect(ip, port)
     
 if __name__=="__main__":
     try:
