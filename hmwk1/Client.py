@@ -1,5 +1,11 @@
 import sys
 import os
+import socket
+def connect(ip,port):
+    socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    server_address = (ip,port)
+    sock.connect(server_address)
+
 
 
 
@@ -8,13 +14,11 @@ import os
 
 
 def main():
-    print "Main"
     try:
-        ip = int(sys.argv[1])
+        ip = sys.argv[1]
         port = int(sys.argv[2])
     except IndexError:
         print "Please specify <server IP_address> <server_port_no>"
-    print (port,ip)
     
 if __name__=="__main__":
     try:
