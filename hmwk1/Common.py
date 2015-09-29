@@ -1,3 +1,6 @@
+"""
+Set of generic functions used throughout the Server/Client.
+"""
 import json
 
 def read_config(fname = "config.json"):
