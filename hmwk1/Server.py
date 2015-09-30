@@ -7,7 +7,7 @@ import threading
 import time
 import logging
 logger = logging.getLogger()
-FORMAT = "[%(levelname)s:%(threadName)-10s:%(funcName)20s] %(message)s" 
+FORMAT = "[%(levelname)s:%(threadName)-10s] %(message)s" 
 logging.basicConfig(format=FORMAT)
 logger.setLevel(logging.DEBUG)
 consoleHandler = logging.StreamHandler()
@@ -71,24 +71,14 @@ def handlerequests(clientsocket, clientaddr):
     run = True
     logging.info("Current Thread %s", threading.currentThread())
     while run:
-        # clientsocket.send("username:")
-        username= clientsocket.recv(1024).strip()
-        logging.debug("username is %s",username)
-        # clientsocket.send("password:")
-        password = clientsocket.recv(1024).strip()
-        auth_status = authenticate(username, password)
-        if auth_status == 0:
-            run = True
-        if auth_status == 1:
-            client_sockets.append(clientsocket)
-            clientsocket.send("Welcome to Simple Chat Server\n")
-            run = False
-            logged_user[time.time()] = username.strip()
-            auth_users.append(username)
-            user_clientmap[username] = clientsocket
-            c = Commands(clientsocket, username, auth_users)
-            commands(clientsocket, username, c)
-    
+        username_passwdstr  = clientsocket.recv(1024).strip()
+        user_passwordstr    = username_passwdstr.split("+")
+        username            = user_passwordstr[0]
+        password            = user_passwordstr[1]
+        auth_status         = authenticate(username, password)
+        clientsocket.send(str(auth_status).encode('utf-8'))
+        run = False
+            
 def authenticate(username, password):
     if username not in auth_users:
         password = password.strip()
