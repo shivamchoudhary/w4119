@@ -13,7 +13,7 @@ logger.setLevel(logging.DEBUG)
 consoleHandler          = logging.StreamHandler()
 logger.addHandler(consoleHandler)
 configuration           = Common.read_config()
-userpasswd,usernames    = Common.load_password(configuration['location']['passwdf'])
+userpass_dict,usernames = Common.load_password(configuration['location']['passwdf'])
 block_time              = configuration['BLOCK_TIME']
 numfailattempt          = configuration['NUMFAILATT']
 blocked_user            = []
@@ -36,6 +36,7 @@ class CreateServer(object):
         self.userpasswd = Common.load_password(
                 configuration['location']['passwdf'])
         serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
         try:
             serversocket.bind((self.host, self.port))
         except socket.error as error:
@@ -74,20 +75,21 @@ def handlerequests(clientsocket, clientaddr):
            
 def authenticate(clientsocket):
     Common.send_msg(clientsocket,"username:")
-    username = Common.read_config(clientsocket)
+    username = Common.recv_msg(clientsocket)
     Common.send_msg(clientsocket,"password:")
     password = Common.recv_msg(clientsocket)
-    print userpasswd
-    if password != userpasswd[username]:
-        Common.send_msg(clientsocket, "0")
-    if password == userpasswd[username]:
-        Common.send_msg(clientsocket, "1")
-    if username in logged_user:
-        Common.send_msg(clientsocket, "2")
-    if username in blocked_user:
-        Common.send_msg(clientsocket, "3")
-    if username not in usernames:
-        Common.send_msg(clientsocket, "4")
+    try:
+        userpass_dict[username]
+        if password != userpass_dict[username]:
+            Common.send_msg(clientsocket, "0")
+        if password == userpass_dict[username]:
+            Common.send_msg(clientsocket, "1")
+        if username in logged_user:
+            Common.send_msg(clientsocket, "2")
+        if username in blocked_user:
+            Common.send_msg(clientsocket, "3")
+    except KeyError:
+        Common.send_msg(clientsocket,"4")
 
 
 def commands(clientsocket, username, c):

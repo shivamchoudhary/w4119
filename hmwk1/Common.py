@@ -3,8 +3,12 @@ Set of generic functions used throughout the Server/Client.
 """
 import json
 import struct
+
+
 def read_config(fname = "config.json"):
-    # Reads the config.json and returns the full key-value pairs.
+    """
+    Reads the config.json and returns the full key-value pairs.
+    """
     with open("config.json") as conf:
         configuration = json.load(conf)
     return configuration
@@ -16,20 +20,20 @@ def load_password(fname):
     user_passdict:A key-value pair of username and password.
     usernames: An array of registered usernames.
     """
-    user_passdict = {}
+    userpass_dict = {}
     usernames = []
     with open(fname) as userpassf:
         userpassf  = userpassf.read().splitlines()
         for val in userpassf:
             vals = val.split(" ")
-            user_passdict[vals[0]] = vals[1]
+            userpass_dict[vals[0]] = vals[1]
             usernames.append(vals[0])
-        return user_passdict, usernames
+        print userpass_dict,usernames
+        return userpass_dict, usernames
 
 """
 The following code is abstracted from the following reference. 
-The reason was I was not getting \n in some of the packets so 
-I had to use it the following way.
+The reason was I was not getting the length of the string which made it annoying.
 Reference: http://stackoverflow.com/questions/17667903/\
 python-socket-receive-large-amount-of-data    
 """
