@@ -31,12 +31,19 @@ def load_password(fname):
         print userpass_dict,usernames
         return userpass_dict, usernames
 
+def close_socket(sock):
+    sock.shutdown(1)
+    sock.close()
+
 """
 The following code is abstracted from the following reference. 
 The reason was I was not getting the length of the string which made it annoying.
 Reference: http://stackoverflow.com/questions/17667903/\
-python-socket-receive-large-amount-of-data    
+python-socket-receive-large-amount-of-data
+After a bit of searching I found the same on the python sockets tutorial.
+Reference: https://docs.python.org/3/howto/sockets.html
 """
+
 """
 These are the generic library functions for sending and recieving the data.
 """
@@ -64,3 +71,4 @@ def recvall(sock, n):
             return None
         data += packet
     return data
+

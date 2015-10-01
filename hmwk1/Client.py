@@ -18,25 +18,31 @@ class Client(object):
 
     def __init__(self, serversocket):
         self.serversocket = serversocket
-        init_run = True
-        while init_run:
+        auth_status = self.authenticate(self.serversocket,auth_status = True)
+        
+        if int(auth_status) == 1:
+            sys.stdout.write(Common.recv_msg(self.serversocket))
+            self.commands(self.serversocket)
+
+    def authenticate(self, socket, auth_status):
+        while auth_status:
             sys.stdout.write(Common.recv_msg(self.serversocket))
             username = raw_input()
-            Common.send_msg(self.serversocket, username)
+            Common.send_msg(self.serversocket,username)
             sys.stdout.write(Common.recv_msg(self.serversocket))
             password = raw_input()
             Common.send_msg(self.serversocket,password)
-            init_run = False
-            self.auth_status = Common.recv_msg(self.serversocket)
-            print self.auth_status
+            auth_status = False
+        return Common.recv_msg(self.serversocket)
     
+    def commands(self,socket):
+        while True:
+            sys.stdout.write("$")
+            command = raw_input()
+            Common.send_msg(socket,command)
+            sys.stdout.write(Common.recv_msg(socket))
 
-def login(**kwargs):
-    username = raw_input("username:")
-    password = raw_input("password:")
-    user_passwdstr = username+"+"+password
-    return user_passwdstr
-
+    
 def main():
     try:
         ip = sys.argv[1]

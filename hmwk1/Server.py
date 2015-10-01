@@ -76,21 +76,27 @@ def handlerequests(clientsocket, clientaddr):
 def authenticate(clientsocket):
     Common.send_msg(clientsocket,"username:")
     username = Common.recv_msg(clientsocket)
+    username = username.strip()
     Common.send_msg(clientsocket,"password:")
     password = Common.recv_msg(clientsocket)
+    password = password.strip()
     try:
-        userpass_dict[username]
+        userpass_dict[username]       
         if password != userpass_dict[username]:
             Common.send_msg(clientsocket, "0")
         if password == userpass_dict[username]:
+            auth_users.append(username)
+            logged_user[username] = time.time()
             Common.send_msg(clientsocket, "1")
+            Common.send_msg(clientsocket,"Welcome to Chat Server!!\n")
+            logging.debug("Login List %s and Auth user is %s",auth_users,logged_user)
+            command = Common.recv_msg(clientsocket)
         if username in logged_user:
             Common.send_msg(clientsocket, "2")
         if username in blocked_user:
             Common.send_msg(clientsocket, "3")
     except KeyError:
         Common.send_msg(clientsocket,"4")
-
 
 def commands(clientsocket, username, c):
     running = True
