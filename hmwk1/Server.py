@@ -6,22 +6,22 @@ import os
 import threading
 import time
 import logging
-logger = logging.getLogger()
-FORMAT = "[%(levelname)s:%(threadName)-10s] %(message)s" 
+logger                  = logging.getLogger()
+FORMAT                  = "[%(levelname)s:%(threadName)-10s] %(message)s" 
 logging.basicConfig(format=FORMAT)
 logger.setLevel(logging.DEBUG)
-consoleHandler = logging.StreamHandler()
+consoleHandler          = logging.StreamHandler()
 logger.addHandler(consoleHandler)
-configuration = Common.read_config()
-userpasswd = Common.load_password(configuration['location']['passwdf'])
-block_time = configuration['BLOCK_TIME']
-numfailattempt = configuration['NUMFAILATT']
-blocked_user = []
-logged_user  = {}
-auth_users = []
-client_sockets =[]
-user_clientmap = {}
-return_status = configuration["return_status"]
+configuration           = Common.read_config()
+userpasswd,usernames    = Common.load_password(configuration['location']['passwdf'])
+block_time              = configuration['BLOCK_TIME']
+numfailattempt          = configuration['NUMFAILATT']
+blocked_user            = []
+logged_user             = {}
+auth_users              = []
+client_sockets          =[]
+user_clientmap          = {}
+return_status           = configuration["return_status"]
 
 class CreateServer(object):
     """
@@ -70,30 +70,25 @@ def handlerequests(clientsocket, clientaddr):
     """
     run = True
     logging.info("Current Thread %s", threading.currentThread())
-    while run:
-        username_passwdstr  = clientsocket.recv(1024).strip()
-        user_passwordstr    = username_passwdstr.split("+")
-        username            = user_passwordstr[0]
-        password            = user_passwordstr[1]
-        auth_status         = authenticate(username, password)
-        clientsocket.send(str(auth_status).encode('utf-8'))
-        run = False
-            
-def authenticate(username, password):
-    if username not in auth_users:
-        password = password.strip()
-        username = username.strip()
-        reqpassword = userpasswd[username]
-        reqpassword = reqpassword.strip()
-        if reqpassword == password:
-            logging.debug("Authentication for %s Successful", username)
-            return 1
-        else:
-            logging.debug("Authentication for %s Unsuccessful", username)
-            return 2
-    else:
-        logger.debug("User %s already logged in", username)
-        return 2
+    authenticate(clientsocket)
+           
+def authenticate(clientsocket):
+    Common.send_msg(clientsocket,"username:")
+    username = Common.read_config(clientsocket)
+    Common.send_msg(clientsocket,"password:")
+    password = Common.recv_msg(clientsocket)
+    print userpasswd
+    if password != userpasswd[username]:
+        Common.send_msg(clientsocket, "0")
+    if password == userpasswd[username]:
+        Common.send_msg(clientsocket, "1")
+    if username in logged_user:
+        Common.send_msg(clientsocket, "2")
+    if username in blocked_user:
+        Common.send_msg(clientsocket, "3")
+    if username not in usernames:
+        Common.send_msg(clientsocket, "4")
+
 
 def commands(clientsocket, username, c):
     running = True
