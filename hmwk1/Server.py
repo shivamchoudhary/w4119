@@ -6,6 +6,8 @@ import os
 import threading
 import time
 import logging
+import select
+import Queue
 logger                  = logging.getLogger()
 FORMAT                  = "[%(levelname)s:%(threadName)-10s] %(message)s" 
 logging.basicConfig(format=FORMAT)
@@ -45,14 +47,40 @@ class CreateServer(object):
         serversocket.listen(5)
         logger.debug("Server Running")
         while True:
-            (clientsocket, clientaddress) = serversocket.accept()
-            logger.info("Starting New Thread for IP:%s and socket %s",
-                    clientaddress, clientsocket)
-            thread = threading.Thread(target=handlerequests, args=(clientsocket,
-                clientaddress))
-            thread.deamon = True
-            thread.start()
+            # (clientsocket, clientaddress) = serversocket.accept()
+            # logger.info("Starting New Thread for IP:%s and socket %s",
+                    # clientaddress, clientsocket)
+            # thread = threading.Thread(target=handlerequests, args=(clientsocket,
+                # clientaddress))
+            # thread.deamon = True
+            # thread.start()
+            new(serversocket)
 
+def new(serversocket):
+    inputs = [serversocket] 
+    outputs = []
+    message_queues = {}
+    while inputs:
+        readable, writable, exceptional = select.select(inputs, outputs, inputs)
+        for s in readable:
+            if s is serversocket:
+                connection,cliet_address = s.accept()
+                connection.setblocking(0)
+                inputs.append(connection)
+                message_queues[connection] = Queue.Queue()
+            else:
+                data = Common.recv_msg(s)
+                if data:
+                    message_queues[s].put(data)
+                    if s not in outputs:
+                        outputs.append(s)
+                else:
+                    if s in outputs:
+                        outputs.remove(s)
+                    inputs.remove(s)
+                    s.close()
+                    del message_queues[s]
+                
 def main():
     """
     Main function creates a server on the specified port and handles

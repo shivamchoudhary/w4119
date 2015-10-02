@@ -22,7 +22,7 @@ class Client(object):
         
         if int(auth_status) == 1:
             sys.stdout.write(Common.recv_msg(self.serversocket))
-            self.commands(self.serversocket)
+            self.input(self.serversocket)
 
     def authenticate(self, socket, auth_status):
         while auth_status:
@@ -35,13 +35,10 @@ class Client(object):
             auth_status = False
         return Common.recv_msg(self.serversocket)
     
-    def commands(self,socket):
-        while True:
-            sys.stdout.write("$")
-            command = raw_input()
-            Common.send_msg(socket,command)
-            sys.stdout.write(Common.recv_msg(socket))
-
+    def input(self,socket):
+        command = raw_input()
+        Common.send_msg(socket,command)
+        Common.recv_msg(socket)
     
 def main():
     try:
