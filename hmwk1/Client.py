@@ -6,6 +6,10 @@ configuration = Common.read_config()
 stat_message = configuration["return_status"]
 
 def connect(ip, port):
+    """
+    Used the Python Socket API to create the TCP/IP Socket
+    https://docs.python.org/2/library/socket.html
+    """
     try:
         serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_address = (ip, port)

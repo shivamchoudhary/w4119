@@ -28,6 +28,12 @@ return_status           = configuration["return_status"]
 class CreateServer(object):
     """
     Creates a server on localhost at specifed port.
+    Citatations:-
+    Used the Python Socket API to create the TCP/IP Socket
+    https://docs.python.org/2/library/socket.html
+    Used the Python Threading API to spawn a new thread for handling the 
+    different connections.
+    https://docs.python.org/2/library/thread.html
     """
     def __init__(self, port):
         """
@@ -47,40 +53,13 @@ class CreateServer(object):
         serversocket.listen(5)
         logger.debug("Server Running")
         while True:
-            # (clientsocket, clientaddress) = serversocket.accept()
-            # logger.info("Starting New Thread for IP:%s and socket %s",
-                    # clientaddress, clientsocket)
-            # thread = threading.Thread(target=handlerequests, args=(clientsocket,
-                # clientaddress))
-            # thread.deamon = True
-            # thread.start()
-            new(serversocket)
+            (clientsocket, clientaddress) = serversocket.accept()
+            logger.info("Starting New Thread for IP:%s and socket %s",
+                    clientaddress, clientsocket)
+            thread = threading.Thread(target=handlerequests, args=(clientsocket,clientaddress))
+            thread.deamon = True
+            thread.start()
 
-def new(serversocket):
-    inputs = [serversocket] 
-    outputs = []
-    message_queues = {}
-    while inputs:
-        readable, writable, exceptional = select.select(inputs, outputs, inputs)
-        for s in readable:
-            if s is serversocket:
-                connection,cliet_address = s.accept()
-                connection.setblocking(0)
-                inputs.append(connection)
-                message_queues[connection] = Queue.Queue()
-            else:
-                data = Common.recv_msg(s)
-                if data:
-                    message_queues[s].put(data)
-                    if s not in outputs:
-                        outputs.append(s)
-                else:
-                    if s in outputs:
-                        outputs.remove(s)
-                    inputs.remove(s)
-                    s.close()
-                    del message_queues[s]
-                
 def main():
     """
     Main function creates a server on the specified port and handles
@@ -184,7 +163,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print "Shutting Down Bye!!"
+        print "Shutting Down the Server Bye!!"
         try:
             sys.exit(0)
         except SystemExit:
