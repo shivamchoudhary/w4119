@@ -40,10 +40,19 @@ class Client(object):
         return Common.recv_msg(self.serversocket)
     
     def input(self,socket):
-        command = raw_input()
-        Common.send_msg(socket,command)
-        Common.recv_msg(socket)
-    
+        while True:
+            print "Type Command"
+            command = raw_input()
+            Common.send_msg(socket,command)
+        #TODO
+        #Add support for multiple recivers:
+            while True:
+                data = Common.recv_msg(socket)
+                if data != str(2):
+                    print data
+                else:
+                    break
+
 def main():
     try:
         ip = sys.argv[1]

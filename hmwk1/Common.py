@@ -68,6 +68,7 @@ def recvall(sock, n):
     while len(data) < n:
         packet = sock.recv(n - len(data))
         if not packet:
+            print "NONE PACKET"
             return None
         data += packet
     return data

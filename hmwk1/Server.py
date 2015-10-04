@@ -21,7 +21,7 @@ numfailattempt          = configuration['NUMFAILATT']
 blocked_user            = []
 logged_user             = {}
 auth_users              = []
-client_sockets          =[]
+user2socket             = {}
 user_clientmap          = {}
 return_status           = configuration["return_status"]
 
@@ -93,18 +93,42 @@ def authenticate(clientsocket):
             Common.send_msg(clientsocket, "0")
         if password == userpass_dict[username]:
             auth_users.append(username)
-            logged_user[username] = time.time()
+            logged_user[username] = int(round(time.time())*1000)
+            user2socket[clientsocket] = username
             Common.send_msg(clientsocket, "1")
             Common.send_msg(clientsocket,"Welcome to Chat Server!!\n")
             logging.debug("Login List %s and Auth user is %s",auth_users,logged_user)
+            print 'Type a command'
             command = Common.recv_msg(clientsocket)
+            parse_a_command(clientsocket,command)
         if username in logged_user:
             Common.send_msg(clientsocket, "2")
         if username in blocked_user:
             Common.send_msg(clientsocket, "3")
     except KeyError:
         Common.send_msg(clientsocket,"4")
+def parse_a_command(clientsocket,command):
+    command = command.split(" ")
+    if command[0] == "whoelse":
+        for user in auth_users:
+            Common.send_msg(clientsocket,user)
+    elif command[0] == "wholast":
+        limit = int(command[1])
+        cur_time = int(round(time.time()*1000))
+        for k,v in logged_user.iteritems():
+            if v-cur_time <limit:
+                print k
+    elif command[0] == "broadcast" and command[1]=="message":
+        for k,v in user2socket.iteritems():
+            print v,command[2]
+    elif command[0] == "broadcast" and command[1]=="user":
+        list_user = command[2:-1]
+        for k,v in user2socket.iteritems():
+            if v in list_user:
+                print k,command[-1]
 
+    
+    return
 def commands(clientsocket, username, c):
     running = True
     clientsocket.send("Type help for the list of commands available\n")
