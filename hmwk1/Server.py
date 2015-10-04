@@ -126,8 +126,16 @@ def parse_a_command(clientsocket,command):
         for k,v in user2socket.iteritems():
             if v in list_user:
                 print k,command[-1]
-
-    
+    elif command[0] == "message":
+        user = command[1]
+        print user,'USER'
+        for k,v in user2socket.iteritems():
+            print k,v
+            if v ==user:
+                print user,command[2:]
+    elif command[0] =="logout":
+        print clientsocket,"going down"
+        clientsocket.close()
     return
 def commands(clientsocket, username, c):
     running = True
