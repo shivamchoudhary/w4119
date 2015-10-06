@@ -41,7 +41,7 @@ class Client(object):
     
     def input(self,socket):
         while True:
-            print "Type Command"
+            sys.stdout.write("$")
             command = raw_input()
             Common.send_msg(socket,command)
         #TODO

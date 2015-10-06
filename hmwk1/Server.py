@@ -6,8 +6,7 @@ import os
 import threading
 import time
 import logging
-import select
-import Queue
+
 logger                  = logging.getLogger()
 FORMAT                  = "[%(levelname)s:%(threadName)-10s] %(message)s" 
 logging.basicConfig(format=FORMAT)
@@ -50,16 +49,18 @@ class CreateServer(object):
         except socket.error as error:
             logging.critical("Socket binding failed with error %s", error)
             sys.exit(0)
-        serversocket.listen(5)
+        serversocket.listen(9)
         logger.debug("Server Running")
-        while True:
+        run = True
+        input = [serversocket,sys.stdin]
+        while run:
             (clientsocket, clientaddress) = serversocket.accept()
             logger.info("Starting New Thread for IP:%s and socket %s",
                     clientaddress, clientsocket)
-            thread = threading.Thread(target=handlerequests, args=(clientsocket,clientaddress))
+            thread = threading.Thread(target=handlerequests, 
+                    args=(clientsocket, clientaddress))
             thread.deamon = True
             thread.start()
-
 def main():
     """
     Main function creates a server on the specified port and handles
@@ -97,8 +98,8 @@ def authenticate(clientsocket):
             user2socket[clientsocket] = username
             Common.send_msg(clientsocket, "1")
             Common.send_msg(clientsocket,"Welcome to Chat Server!!\n")
-            logging.debug("Login List %s and Auth user is %s",auth_users,logged_user)
-            print 'Type a command'
+            logging.debug("Login List %s and Auth user is %s",
+                    auth_users, logged_user)
             command = Common.recv_msg(clientsocket)
             parse_a_command(clientsocket,command)
         if username in logged_user:
@@ -107,6 +108,7 @@ def authenticate(clientsocket):
             Common.send_msg(clientsocket, "3")
     except KeyError:
         Common.send_msg(clientsocket,"4")
+
 def parse_a_command(clientsocket,command):
     command = command.split(" ")
     if command[0] == "whoelse":
@@ -134,63 +136,8 @@ def parse_a_command(clientsocket,command):
             if v ==user:
                 print user,command[2:]
     elif command[0] =="logout":
-        print clientsocket,"going down"
-        clientsocket.close()
+        return 1
     return
-def commands(clientsocket, username, c):
-    running = True
-    clientsocket.send("Type help for the list of commands available\n")
-    while running:
-        clientsocket.send("$")
-        input = clientsocket.recv(1024)
-        input = input.strip()
-        input = input.split()
-        if input[0] == "logout":
-            c.logout()
-            running = False
-        if input[0] == "whoelse":
-            c.whoelse()
-        if input[0] == "broadcast" and input[1] == "message":
-            c.broadcast_message(input[1])
-        if input[0] == "message":
-            reciever = input[1]
-            message = input[2]
-            c.message(reciever,message,username)
-
-class Commands(object):
-    """
-    Commands supported for the Chat server.
-    """
-    def __init__(self, clientsocket, username, auth_users, **kwargs):
-        self.clientsocket = clientsocket
-        self.username = username
-        self.auth_users = auth_users
-    
-    def cleanup(self):
-        self.auth_users.remove(self.username)
-        self.clientsocket.close()
-    
-    def logout(self):
-        logger.debug("USER:%s is logging out",self.username)
-        self.cleanup()
-    
-    def whoelse(self):
-        for values in auth_users:
-            self.clientsocket.send(values)
-            self.clientsocket.send("\n")
-    
-    def wholast(self, time):
-        pass
-    
-    def broadcast_message(self,message):
-        for client in client_sockets:
-            client.send(message)
-    
-    def message(self,reciever,message,sender):
-        reciever_clientsocket = user_clientmap[reciever]
-        message = sender+":"+message
-        reciever_clientsocket.send(message)
-
 if __name__ == "__main__":
     try:
         main()
