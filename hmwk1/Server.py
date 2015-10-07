@@ -52,7 +52,6 @@ class CreateServer(object):
         serversocket.listen(9)
         logger.debug("Server Running")
         run = True
-        input = [serversocket,sys.stdin]
         while run:
             (clientsocket, clientaddress) = serversocket.accept()
             logger.info("Starting New Thread for IP:%s and socket %s",
@@ -114,15 +113,16 @@ def parse_a_command(clientsocket,command):
     if command[0] == "whoelse":
         for user in auth_users:
             Common.send_msg(clientsocket,user)
-            return
+        return
     elif command[0] == "wholast":
         limit = int(command[1])
         cur_time = int(round(time.time()*1000))
         for k,v in logged_user.iteritems():
             if v-cur_time <limit:
-                print k
+                Common.send_msg(clientsocket,k)
     elif command[0] == "broadcast" and command[1]=="message":
         for k,v in user2socket.iteritems():
+            Common.send_msg(k,command[2])
             print v,command[2]
     elif command[0] == "broadcast" and command[1]=="user":
         list_user = command[2:-1]
@@ -148,8 +148,4 @@ if __name__ == "__main__":
             sys.exit(0)
         except SystemExit:
             os._exit(0)
-
-
-
-
 
