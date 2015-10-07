@@ -114,6 +114,7 @@ def parse_a_command(clientsocket,command):
     if command[0] == "whoelse":
         for user in auth_users:
             Common.send_msg(clientsocket,user)
+            return
     elif command[0] == "wholast":
         limit = int(command[1])
         cur_time = int(round(time.time()*1000))
