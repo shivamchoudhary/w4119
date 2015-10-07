@@ -99,8 +99,10 @@ def authenticate(clientsocket):
             Common.send_msg(clientsocket,"Welcome to Chat Server!!\n")
             logging.debug("Login List %s and Auth user is %s",
                     auth_users, logged_user)
-            command = Common.recv_msg(clientsocket)
-            parse_a_command(clientsocket,command)
+            while True:
+                command = Common.recv_msg(clientsocket)
+                if command:
+                    parse_a_command(clientsocket,command)
         if username in logged_user:
             Common.send_msg(clientsocket, "2")
         if username in blocked_user:
@@ -109,11 +111,11 @@ def authenticate(clientsocket):
         Common.send_msg(clientsocket,"4")
 
 def parse_a_command(clientsocket,command):
+    print command
     command = command.split(" ")
     if command[0] == "whoelse":
         for user in auth_users:
             Common.send_msg(clientsocket,user)
-        return
     elif command[0] == "wholast":
         limit = int(command[1])
         cur_time = int(round(time.time()*1000))
@@ -123,22 +125,23 @@ def parse_a_command(clientsocket,command):
     elif command[0] == "broadcast" and command[1]=="message":
         for k,v in user2socket.iteritems():
             Common.send_msg(k,command[2])
-            print v,command[2]
+    
     elif command[0] == "broadcast" and command[1]=="user":
         list_user = command[2:-1]
         for k,v in user2socket.iteritems():
             if v in list_user:
-                print k,command[-1]
+                Common.send_msg(k,command[-1])
     elif command[0] == "message":
         user = command[1]
-        print user,'USER'
         for k,v in user2socket.iteritems():
-            print k,v
-            if v ==user:
-                print user,command[2:]
+            if v == user:
+                message = ''.join(command[2:])
+                Common.send_msg(k,message)
     elif command[0] =="logout":
         return 1
+    
     return
+
 if __name__ == "__main__":
     try:
         main()
