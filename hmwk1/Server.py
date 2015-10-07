@@ -102,7 +102,8 @@ def authenticate(clientsocket):
             while True:
                 command = Common.recv_msg(clientsocket)
                 if command:
-                    parse_a_command(clientsocket,command)
+                    output = parse_a_command(clientsocket,command)
+                    Common.send_msg(clientsocket,output)
         if username in logged_user:
             Common.send_msg(clientsocket, "2")
         if username in blocked_user:
@@ -111,11 +112,12 @@ def authenticate(clientsocket):
         Common.send_msg(clientsocket,"4")
 
 def parse_a_command(clientsocket,command):
-    print command
     command = command.split(" ")
+    output = []
     if command[0] == "whoelse":
         for user in auth_users:
-            Common.send_msg(clientsocket,user)
+            output.append(user)
+            # Common.send_msg(clientsocket,user)
     elif command[0] == "wholast":
         limit = int(command[1])
         cur_time = int(round(time.time()*1000))
@@ -140,7 +142,7 @@ def parse_a_command(clientsocket,command):
     elif command[0] =="logout":
         return 1
     
-    return
+    return ",".join(output)
 
 if __name__ == "__main__":
     try:

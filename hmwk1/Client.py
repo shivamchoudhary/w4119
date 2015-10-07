@@ -45,14 +45,8 @@ class Client(object):
             command = raw_input()
             if command:
                 Common.send_msg(socket,command)
-            else:
-                Common.recv_msg(socket)
-                while True:
-                    data = Common.recv_msg(socket)
-                    if data != str(2) and data:
-                        print data
-                    else:
-                        break
+                data = Common.recv_msg(socket)
+                print data 
 
 def main():
     try:
