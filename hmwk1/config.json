@@ -9,9 +9,16 @@
                 "0":"Authentication Failed",
                 "1":"Authentication Successful",
                 "2":"User Already Logged In",
-                "3":"User in BLOCKED POOL"
+                "3":"User in BLOCKED POOL",
+                "4":"User does not exist",
+                "5":"Maximum Attempts Reached",
+                "6":"Retry username and Password",
+                "7":"Parameter missing in command",
+                "8":"Logout the user",
+                "9":"Command not recognized",
+                "10":"Continue"
         },
-        "BLOCK_TIME":60,
+        "BLOCK_TIME":30,
         "TIME_OUT" :30,
         "host":"127.0.0.1",
         "NUMFAILATT":3
