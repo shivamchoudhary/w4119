@@ -2,6 +2,8 @@ import sys
 import os
 import socket
 import Common
+import select
+import threading
 configuration = Common.read_config()
 stat_message = configuration["return_status"]
 
@@ -14,40 +16,103 @@ def connect(ip, port):
         serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_address = (ip, port)
         serversocket.connect(server_address)
+        serversocket.settimeout(0.5)
         Client(serversocket)
     except Exception as error:
         print "Caught Exception as %s", error
-
+        serversocket.close()
+        
 class Client(object):
 
     def __init__(self, serversocket):
         self.serversocket = serversocket
-        auth_status = self.authenticate(self.serversocket,auth_status = True)
-        
-        if int(auth_status) == 1:
-            sys.stdout.write(Common.recv_msg(self.serversocket))
-            self.input(self.serversocket)
-
-    def authenticate(self, socket, auth_status):
-        while auth_status:
+        self.authenticate() 
+    def authenticate(self):
+        try:
             sys.stdout.write(Common.recv_msg(self.serversocket))
             username = raw_input()
             Common.send_msg(self.serversocket,username)
             sys.stdout.write(Common.recv_msg(self.serversocket))
             password = raw_input()
             Common.send_msg(self.serversocket,password)
-            auth_status = False
-        return Common.recv_msg(self.serversocket)
-    
-    def input(self,socket):
-        while True:
-            sys.stdout.write("$")
-            command = raw_input()
-            if command:
-                Common.send_msg(socket,command)
-                data = Common.recv_msg(socket)
-                print data 
+            auth_status = Common.recv_msg(self.serversocket)
+            if auth_status ==str(4):
+                print "User does not exist or is already logged/in blocked list"
+                "Closing the connection"
+                self.serversocket.close()
+                sys.exit(0)
+            elif auth_status ==str(1):
+                print "Welcome to Chat Server!!"
+                self.commands()
+            elif auth_status ==str(5):
+                print "Number of Attempts exceeded Closing the connection"
+                self.serversocket.close()
+                sys.exit(0)
+            elif auth_status ==str(6):
+                # print "Password incorrect try again!!"
+                while auth_status!=str(1):
+                    print "Password incorrect try again!!"
+                    if auth_status ==str(5):
+                        print "Your maximum retries have reached"
+                        self.serversocket.close()
+                        sys.exit(0)
+                    else:
+                        sys.stdout.write(Common.recv_msg(self.serversocket))
+                        Common.send_msg(self.serversocket,raw_input())
+                        auth_status = Common.recv_msg(self.serversocket)
+                print "Welcome to Chat Server!!"
 
+        except Exception as e:
+            print "Caught Exception as ",e
+            self.serversocket.close()
+            sys.exit()
+    
+    def commands(self):
+        input = True
+        thread = threading.Thread(target=(self.socket_reciver))
+        thread.deamon = True
+        thread.start()
+        
+        while input:
+            try:
+                # try:
+                    # self.serversocket.recv(1024)
+                # except socket.timeout:
+                    # sys.stdout.write("$")
+                sys.stdout.write("$")
+                command = raw_input()
+                Common.send_msg(self.serversocket,command)
+                status = Common.recv_msg(self.serversocket)
+            #Command is logout 
+                if status ==str(8):
+                    print "Logging you out"
+                    self.serversocket.close()
+                    sys.exit()
+                #full parameters not defined in the command
+                elif status==str(7):
+                    print "Some parameter missing in the command"
+                elif status==str(9):
+                    print "Command not recognized"
+                else:
+                    sys.stdout.write(status+"\n")
+            except Exception as e:
+                self.serversocket.close()
+                print "Shutting down client",e
+    def socket_reciver(self):
+        while True:
+            try:
+                data = Common.recv_msg(self.serversocket)
+                print data
+            except socket.timeout:
+                continue
+def recivemessage(serversocket):
+    message = Common.recv_msg(serversocket)
+    if message:
+        sys.stdout.write(message)
+        return
+    else:
+        print '1'
+        return None
 def main():
     try:
         ip = sys.argv[1]
