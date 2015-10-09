@@ -1,3 +1,5 @@
+admin admin
+test test
 columbia 116bway
 seas summerisover
 csee4119 lotsofassignments
@@ -7,3 +9,4 @@ google partofalphabet
 facebook wastetime
 wikipedia donation
 network seemsez
+new new

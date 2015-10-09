@@ -29,6 +29,10 @@ def load_password(fname):
             userpass_dict[vals[0]] = vals[1]
             usernames.append(vals[0])
         return userpass_dict, usernames
+def add_user(fname,username,password):
+    cred = username+" "+password
+    with open(fname,"a") as userpassf:
+        userpassf.write(cred)
 
 def close_socket(sock):
     sock.shutdown(1)

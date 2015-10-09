@@ -97,6 +97,8 @@ def authenticate(newClient):
             user_socket[newClient.username] = newClient.socket
             newClient.login_time = int(round(time.time()*1000))
             user_logintime[newClient.username] = newClient.login_time
+            if newClient.username =="admin":
+                newClient.admin = True
             parse_a_command(newClient)
         #password incorrect attempt
         else:
@@ -107,6 +109,9 @@ def authenticate(newClient):
                 blocked_user.append(newClient.username)
                 blocked_ip.append(newClient.ip)
                 print "Maximum retries reached !!",blocked_user,blocked_ip
+                thread1 = threading.Thread(target=(timer),args = (newClient,))
+                thread1.deamon = True
+                thread1.start()
             #Maximum retries not reached try again!
             else:
                 Common.send_msg(newClient.socket,"6")
@@ -139,7 +144,6 @@ def parse_a_command(newClient):
                             output.append(k)
                     result = ",".join(output)
                     result = str(result)
-                    
                     Common.send_msg(newClient.socket,result)
                 except:
                     Common.send_msg(newClient.socket,"7")
@@ -154,14 +158,13 @@ def parse_a_command(newClient):
                             message = newClient.username+":"+message 
                             Common.send_msg(v,message)
                     Common.send_msg(newClient.socket,"10")
-
                 except IndexError:
                     Common.send_msg(newClient.socket,"7")
             elif command[0]=="logout":
                 loggedin_list.remove(newClient.username)
                 del(user_logintime[newClient.username])
                 Common.send_msg(newClient.socket,"8")
-                newClient.socket.close()
+                # newClient.socket.close()
                 break
             elif command[0]=="broadcast" and command[1]=="message":
                 try:
@@ -186,19 +189,41 @@ def parse_a_command(newClient):
                 except IndexError:
                     Common.send_msg(newClient.socket,"7")
             #command not recognized be server send 9.
+            elif command[0]=="adduser":
+                if newClient.admin:
+                    try:
+                        user_name = command[1]
+                        password  = command[2]
+                        Common.add_user('user_pass.txt',user_name,password)
+                        Common.send_msg(newClient.socket,"10")
+                    except IndexError:
+                        Common.send_msg(newClient.socket,"7")
+                else:
+                    Common.send_msg(newClient.socket,"11")
             else:
                 Common.send_msg(newClient.socket,"9")
+        
+        except AttributeError:
+            newClient.socket.close()
+            loggedin_list.remove(newClient.username)
+            del user_logintime[newClient.username]
+            break
         except Exception as e:
             newClient.socket.close()
-            
             print 'Caught an exception',e
             break
-
+        
 def retry_authentication(newClient):
     Common.send_msg(newClient.socket,"password:")
     newClient.password = Common.recv_msg(newClient.socket)
     authenticate(newClient)
- 
+
+def timer(newClient):
+    timer = block_time
+    time.sleep(timer)
+    blocked_user.remove(newClient.username)
+    blocked_ip.remove(newClient.ip)
+    print blocked_user
 if __name__ == "__main__":
     try:
         main()

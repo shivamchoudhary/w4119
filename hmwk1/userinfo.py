@@ -10,6 +10,7 @@ class userInfo:
         self.socket = socket
         self.ip  =address[0]
         self.port = address[1]
+        self.admin = False
     def wrong_passwd(self):
         self.login_attempt += 1
 

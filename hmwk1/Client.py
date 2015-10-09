@@ -61,7 +61,7 @@ class Client(object):
                         Common.send_msg(self.serversocket,raw_input())
                         auth_status = Common.recv_msg(self.serversocket)
                 print "Welcome to Chat Server!!"
-
+                self.commands()
         except Exception as e:
             print "Caught Exception as ",e
             self.serversocket.close()
@@ -84,9 +84,9 @@ class Client(object):
                 #Command is logout 
                 if status ==str(8):
                     print "Logging you out"
-                    self.serversocket.close()
-                    sys.exit()
-                    break
+                    # self.serversocket.close()
+                    # sys.exit()
+                    input=False
                 #full parameters not defined in the command
                 elif status==str(7):
                     print "Some parameter missing in the command"
@@ -94,6 +94,8 @@ class Client(object):
                     print "Command not recognized"
                 elif status==str(10):
                     pass
+                elif status==str(11):
+                    print "You are not Admin"
                 else:
                     status = status.split(",")
                     for val in status:
@@ -103,18 +105,24 @@ class Client(object):
                 self.serversocket.close()
                 print "Shutting down client",e
                 break
-    
+        return
+    #This thread runs in background and just passes async messages like
+    #broadcast and private message!!
     def new_socket_reciver(self):
         while True:    
             try:
                 r,_,_ = select.select([self.serversocket],[],[])
                 if r:
-                    print Common.recv_msg(self.serversocket)
-                    sys.stdout.write("$")
+                    data = Common.recv_msg(self.serversocket)
+                    print data
+                    if not data:
+                        print "Server Down Switching off"
+                        self.serversocket.close()
+                        sys.exit()
+                        break
                 else:
                     continue
             except:
-                print '1'
                 self.serversocket.close()
                 sys.exit()
 
