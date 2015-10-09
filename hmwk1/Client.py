@@ -16,7 +16,7 @@ def connect(ip, port):
         serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_address = (ip, port)
         serversocket.connect(server_address)
-        serversocket.settimeout(0.5)
+        # serversocket.settimeout(0.5)
         Client(serversocket)
     except Exception as error:
         print "Caught Exception as %s", error
@@ -69,50 +69,55 @@ class Client(object):
     
     def commands(self):
         input = True
-        thread = threading.Thread(target=(self.socket_reciver))
+        thread = threading.Thread(target=(self.new_socket_reciver))
         thread.deamon = True
         thread.start()
         
         while input:
             try:
-                # try:
-                    # self.serversocket.recv(1024)
-                # except socket.timeout:
-                    # sys.stdout.write("$")
                 sys.stdout.write("$")
                 command = raw_input()
+                if not command:
+                    continue
                 Common.send_msg(self.serversocket,command)
                 status = Common.recv_msg(self.serversocket)
-            #Command is logout 
+                #Command is logout 
                 if status ==str(8):
                     print "Logging you out"
                     self.serversocket.close()
                     sys.exit()
+                    break
                 #full parameters not defined in the command
                 elif status==str(7):
                     print "Some parameter missing in the command"
                 elif status==str(9):
                     print "Command not recognized"
+                elif status==str(10):
+                    pass
                 else:
-                    sys.stdout.write(status+"\n")
+                    status = status.split(",")
+                    for val in status:
+                        sys.stdout.write(val+"\n")
+                    sys.stdout.flush()
             except Exception as e:
                 self.serversocket.close()
                 print "Shutting down client",e
-    def socket_reciver(self):
-        while True:
+                break
+    
+    def new_socket_reciver(self):
+        while True:    
             try:
-                data = Common.recv_msg(self.serversocket)
-                print data
-            except socket.timeout:
-                continue
-def recivemessage(serversocket):
-    message = Common.recv_msg(serversocket)
-    if message:
-        sys.stdout.write(message)
-        return
-    else:
-        print '1'
-        return None
+                r,_,_ = select.select([self.serversocket],[],[])
+                if r:
+                    print Common.recv_msg(self.serversocket)
+                    sys.stdout.write("$")
+                else:
+                    continue
+            except:
+                print '1'
+                self.serversocket.close()
+                sys.exit()
+
 def main():
     try:
         ip = sys.argv[1]

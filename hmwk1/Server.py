@@ -126,22 +126,22 @@ def parse_a_command(newClient):
             if command[0] =="whoelse":
                 output = []
                 for users in loggedin_list: 
-                    output.append(users)
+                    if users!=newClient.username:
+                        output.append(users)
                 Common.send_msg(newClient.socket,",".join(output))
-
             elif command[0] =="wholast":
                 output = []
                 try:
-                    limit = int(command[1])
+                    limit = int(command[1])*60*100
                     cur_time = int(round(time.time()*1000))
                     for k,v in user_logintime.iteritems():
-                        if v-cur_time<limit:
+                        if v-cur_time<limit and k!=newClient.username:
                             output.append(k)
-                    result = "".join(output)
+                    result = ",".join(output)
                     result = str(result)
                     
                     Common.send_msg(newClient.socket,result)
-                except IndexError:
+                except:
                     Common.send_msg(newClient.socket,"7")
             elif command[0]=="message":
                 try:
@@ -149,8 +149,9 @@ def parse_a_command(newClient):
                     message = command[2:]
                     output = []
                     for k,v in user_socket.iteritems():
-                        if k==username:
+                        if k==username and k!=newClient.username:
                             message = ",".join(message)
+                            message = newClient.username+":"+message 
                             Common.send_msg(v,message)
                     Common.send_msg(newClient.socket,"10")
 
@@ -165,7 +166,8 @@ def parse_a_command(newClient):
             elif command[0]=="broadcast" and command[1]=="message":
                 try:
                     message = command[2:]
-                    message = "".join(message)
+                    message = " ".join(message)
+                    message = newClient.username+":"+ message
                     for k,v in user_socket.iteritems():
                         Common.send_msg(v,message)
                 except IndexError:
@@ -174,11 +176,13 @@ def parse_a_command(newClient):
                 try:
                     index = command.index("message")
                     user_list = command[2:index]
-                    message = command[index:]
-                    message = "".join(message)
+                    message = command[index+1:]
+                    message = " ".join(message)
+                    message = newClient.username+":"+message
                     for k,v in user_socket.iteritems():
-                        if k in user_list:
+                        if k in user_list and k!=newClient.username:
                             Common.send_msg(v,message)
+                    Common.send_msg(newClient.socket,"10")
                 except IndexError:
                     Common.send_msg(newClient.socket,"7")
             #command not recognized be server send 9.
@@ -186,19 +190,15 @@ def parse_a_command(newClient):
                 Common.send_msg(newClient.socket,"9")
         except Exception as e:
             newClient.socket.close()
+            
             print 'Caught an exception',e
             break
+
 def retry_authentication(newClient):
     Common.send_msg(newClient.socket,"password:")
     newClient.password = Common.recv_msg(newClient.socket)
     authenticate(newClient)
-def timer(username,clientsocket):
-    print 'Spawning new thread',threading.currentThread()
-    time.sleep(block_time)
-    blocked_user.remove(username)
-    blocked_socket.remove(clientsocket)
-    client_loginattempt[username] = 0
-    print 'Removing user',blocked_user 
+ 
 if __name__ == "__main__":
     try:
         main()
