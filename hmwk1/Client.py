@@ -76,7 +76,6 @@ class Client(object):
         while input:
             try:
                 sys.stdout.write("$")
-                Common.recv_msg(self.serversocket)
                 command = raw_input()
                 if not command:
                     continue
