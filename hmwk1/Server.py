@@ -19,6 +19,7 @@ blocked_user = [] #list of users currently blocked in the server
 blocked_ip = [] #list of IP's currently blocked in the server
 blocked_sockets = [] #list of sockets currently blocked in the server
 user_socket = {}
+meta_data = {}
 class CreateServer(object):
     """
     Creates a server on localhost at specifed port.
@@ -157,6 +158,10 @@ def parse_a_command(newClient):
                             message = ",".join(message)
                             message = newClient.username+":"+message 
                             Common.send_msg(v,message)
+                    a = username not in loggedin_list
+                    if a:
+                        meta_data[username] =message
+                        print 'User offline saving data',meta_data
                     Common.send_msg(newClient.socket,"10")
                 except IndexError:
                     Common.send_msg(newClient.socket,"7")
@@ -186,7 +191,11 @@ def parse_a_command(newClient):
                         if k in user_list and k!=newClient.username:
                             Common.send_msg(v,message)
                     Common.send_msg(newClient.socket,"10")
-                except IndexError:
+                    for user in user_list:
+                        if user not in loggedin_list:
+                            meta_data[user] = message
+                            print "User offline saving data",meta_data
+                except Exception:
                     Common.send_msg(newClient.socket,"7")
             #command not recognized be server send 9.
             elif command[0]=="adduser":
@@ -223,7 +232,7 @@ def timer(newClient):
     time.sleep(timer)
     blocked_user.remove(newClient.username)
     blocked_ip.remove(newClient.ip)
-    print blocked_user
+
 if __name__ == "__main__":
     try:
         main()

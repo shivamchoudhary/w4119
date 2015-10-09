@@ -76,6 +76,7 @@ class Client(object):
         while input:
             try:
                 sys.stdout.write("$")
+                Common.recv_msg(self.serversocket)
                 command = raw_input()
                 if not command:
                     continue
@@ -85,7 +86,7 @@ class Client(object):
                 if status ==str(8):
                     print "Logging you out"
                     # self.serversocket.close()
-                    # sys.exit()
+                    sys.exit()
                     input=False
                 #full parameters not defined in the command
                 elif status==str(7):
