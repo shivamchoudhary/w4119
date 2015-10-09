@@ -31,7 +31,8 @@ password into the dictionary.
 >> It has a recieve and send function which takes care of byte ordering and 
 sends the size of the message len before sending it.
 **Warning: Please make sure that the json is properly formatted before starting 
-the server!! 
+the server!!
+
 <==============================================================================>
 
 Features:-
@@ -54,3 +55,6 @@ server restarts. The same can be verified by opening the file user_pass.txt
 Eg:- adduser shivam shivam > will add the entry shivam shivam at the end of 
 user_pass.txt
 7)logout:- Logs out the particular user from the server.
+
+<==============================================================================>
+
