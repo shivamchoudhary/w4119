@@ -3,7 +3,7 @@
                 "passwdf":"user_pass.txt"
                 },
         "commands" : [
-                "whoelse","wholasthr","wholastmin","logout"
+                "whoelse"
         ],
         "return_status":{
                 "0":"Authentication Failed",
