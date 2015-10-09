@@ -2,6 +2,7 @@ Homework 1: Computer Networks
 Shivam Choudhary(sc3973)
 
 <==============================================================================>
+
 Instructions For Running the code:-
 1) Auto Mode:-
 * There is a make file with two directives server and client
@@ -22,6 +23,15 @@ host: The ip address on which the Server defaults.
 Location: Specifies the location of the user_pass.txt file.
 return_status: They specify the various return status for the messages recieved
 from the Server.
+The orgranization of code is in the following way:
+1) Common.py:- 
+>>It contains all the common functions used throughout by Server 
+and Client. Also loads the json file ('config.json') and extracts users and 
+password into the dictionary.
+>> It has a recieve and send function which takes care of byte ordering and 
+sends the size of the message len before sending it.
+**Warning: Please make sure that the json is properly formatted before starting 
+the server!! 
 <==============================================================================>
 
 Features:-
