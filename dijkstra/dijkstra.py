@@ -18,7 +18,6 @@ class Dijkstra(object):
             else:
                 self.dist_vector[vertice] = int(1000000)
         for node in self.N:
-            # w = min(self.dist_vector, key=self.dist_vector.get)
             w = self.next_node()
             if w and w not in self.N:
                 self.N.append(w)
