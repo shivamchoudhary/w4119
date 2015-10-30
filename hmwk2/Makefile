@@ -1,0 +1,21 @@
+#Common Parameters
+filename := file.txt #common for both reciever and sender
+
+#Reciever Parameters
+listening_port :=20000
+sender_IP :=127.0.0.1
+sender_port :=20001
+log_filename_reciever :=recv_logfile.txt
+
+#Sender Parameters
+remote_IP :=127.0.0.1
+remote_port :=20000
+ack_port_num :=20001
+log_filename_sender :=send_logfile.txt
+window_size :=1152
+sender:
+	python sender.py $(filename) $(remote_IP) $(remote_port) $(ack_port_num)  $(log_filename_sender) $(window_size)
+reciever:
+	python receiver.py $(<filename>) $(<listening_port>) $(<sender_IP>) $(<sender_port>) $(<log_filename>)
+clean:
+	rm *.pyc logfile.txt
