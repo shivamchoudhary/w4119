@@ -33,10 +33,23 @@ class Receiver(object):
         """
         recvsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         recvsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        recvsocket.bind(('127.0.0.1',41193))
+        recvsocket.bind(('localhost', 20000))
         while True:
             data,addr = recvsocket.recvfrom(1024)
-            print struct.unpack("!HHLLBBHHH", data[:20])
+            sport,dport,seq,ack,off,flags,win,sum,urp = struct.unpack("!HHLLBBHHH", data[:20])
+            expected_checksum = sum
+            sum = 0
+            tcp_header = struct.pack("!HHLLBBHHH",sport,dport,seq,ack,off,flags,
+                    win,sum,urp)
+            msg = data[20:]
+            checksum = Common.checksum((tcp_header+msg))
+            if checksum !=expected_checksum:
+                print "Checksum failed"
+                print data[20:]
+            else:
+                print checksum
+
+
 def main():
     """
     Obtains the parameters from the command line and raises a generic exception
