@@ -6,9 +6,7 @@ import os
 
 """
 Citations:
-    1) Python's Hashlib(I used MD5 for this assignment) 
-    https://docs.python.org/2/library/hashlib.html 
-    2) Python's UDP Communication Wiki
+    1) Python's UDP Communication Wiki
     https://wiki.python.org/moin/UdpCommunication
 """
 class Receiver(object):
@@ -19,7 +17,7 @@ class Receiver(object):
     def __init__(self, filename, listening_port, sender_IP, sender_port,
             log_filename_receiver):
         """
-        Initializing the Receiver Object with all the parameters.
+        Initializing the Receiver state.
         """
         self.filename = filename                #Receiver outfile.
         self.listening_port = listening_port    #Recieverport number.
@@ -27,6 +25,7 @@ class Receiver(object):
         self.sender_port = sender_port          #sender port number.
         self.log_filename_receiver = log_filename_receiver # the log_file
         self.createSocket()
+    
     def createSocket(self):
         """
         Create a socket and listen on that. Socket will be raw
@@ -35,14 +34,16 @@ class Receiver(object):
         recvsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         recvsocket.bind(('localhost', 20000))
         while True:
-            data,addr = recvsocket.recvfrom(1024)
-            sport,dport,seq,ack,off,flags,win,sum,urp = struct.unpack("!HHLLBBHHH", data[:20])
+            data, addr = recvsocket.recvfrom(1024)
+            sport, dport, seq, ack, off, flags, win, sum, urp = struct.unpack(
+                    "!HHLLBBHHH", data[:20])
             expected_checksum = sum
+            #required because at sender checksum is computed with sum=0
             sum = 0
             tcp_header = struct.pack("!HHLLBBHHH",sport,dport,seq,ack,off,flags,
                     win,sum,urp)
             msg = data[20:]
-            checksum = Common.checksum((tcp_header+msg))
+            checksum = Common.Packet.checksum((tcp_header+msg))
             if checksum !=expected_checksum:
                 print "Checksum failed"
                 print data[20:]

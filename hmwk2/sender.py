@@ -8,10 +8,19 @@ Citations:
 """
 """
 Sender FSM:-
-Stage 1) Send Packet Don't care what happens to it
-Stage 2) Detect checksum errors by listening on port.
-     
-
+1)Architecture as per assignment:-
+            Proxy(port 41192)
+              /       \                
+          sender    receiver
+       (127.0.0.1) (127.0.0.1)
+2)Usage: 
+    (Proxy Mode)
+    make lnkemu
+    make testsender
+    make reciever
+    (Without Proxy)
+    make sender
+    make reciever
 """
 class Sender(object):
 
@@ -22,22 +31,18 @@ class Sender(object):
         """
         self.filename       = filename      #sent filename,default 'file.txt'
         self.remote_IP      = remote_IP     #IP for sending,default 127.0.0.1
-        self.remote_port    = remote_port   #Port number,default 20000
+        self.remote_port    = remote_port   #Port number
         self.ack_port_num   = ack_port_num  #listening port,default 20001
         self.log_filename   = log_filename  #log file ,default send_logfile.txt
         self.window_size    = window_size   #window size,default 1152 bytes
         # Load file
         self.file   = open(self.filename) #open the file to be sent.
         window      = self.seekfile()
-        sock        = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,
+        send_sock        = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,
                         socket.IPPROTO_UDP)
-        #Initialize seq,nextseqnum
-        self.seq        = 0
-        self.nextseqnum = 1
-        self.base       = 1
-        packet      = Common.Packet(window)
-        data        = packet.pack()
-        sock.sendto(data,(self.remote_IP,self.remote_port))
+        packet          = Common.Packet(window)
+        data            = packet.pack()
+        send_sock.sendto(data,(self.remote_IP,self.remote_port))
     
     def rdt_send(self,data):
         """
@@ -47,8 +52,8 @@ class Sender(object):
 
     def timeout(self):
         pass
-    def rdt_rcv(self,rcvpkt):
-        pass
+    def rdt_rcv(self):
+        pass 
     def seekfile(self, seek_length=0):
         """
         Seeks the filename by window size,takes optional argument for 

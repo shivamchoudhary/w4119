@@ -20,9 +20,12 @@ class Packet(object):
         self.sum    = 0         #Checksum computation 16 bit
         self.urp    = 0         #Urgent pointer not used
         self.msg    = msg
-    def checksum(self, msg):
+    
+    @staticmethod
+    def checksum(msg):
         """
-        Computing the checksum taking two consequetive bits at a time. 
+        Computing the checksum taking two consequetive bits at a time.
+        staticmethod to be used by reciever as well
         """
         s = 0
         for i in range(0, len(msg), 2):
@@ -42,5 +45,6 @@ class Packet(object):
         tcp_header = struct.pack("!HHLLBBHHH", self.sport, self.dport, self.seq,
                 self.ack, self.off, self.flags, self.win, self.sum, self.win)
         packet = tcp_header+self.msg
+
         return packet
 
