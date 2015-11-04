@@ -43,7 +43,7 @@ class Receiver(object):
             tcp_header = struct.pack("!HHLLBBHHH",sport,dport,seq,ack,off,flags,
                     win,sum,urp)
             msg = data[20:]
-            checksum = Common.Packet.checksum((tcp_header+msg))
+            checksum = Common.checksum((tcp_header+msg))
             if checksum !=expected_checksum:
                 print "Checksum failed"
                 print data[20:]
