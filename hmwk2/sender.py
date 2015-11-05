@@ -83,11 +83,11 @@ class Sender(object):
         #Initialize the socket for udt_send
         self.udt_sock       = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,
                         socket.IPPROTO_UDP)
-        self.udt_sock.connect(('localhost', self.remote_port))
+        self.udt_sock.connect((self.remote_IP, self.remote_port))
         self.udt_send() 
     def udt_send(self):
         """
-        Send the data.
+        Unreliably send the data through the channel!!
         """
         if self.NextSeqNum <self.SendBase+self.N:
             pkt = self.make_pkt()
@@ -100,9 +100,11 @@ class Sender(object):
         pkt = Common.Packet(self.ack_port_num, self.remote_port, 
                 self.NextSeqNum,0,msg)
         return pkt.pack()
-    def send_data(self,pkt):
+    def send_data(self, pkt):
+        """
+        This just sends the packet over the link!!
+        """
         Common.send_msg(self.udt_sock, pkt) 
-
     def timeout(self):
         pass
     def rdt_rcv(self):
