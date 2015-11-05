@@ -37,6 +37,7 @@ class Receiver(object):
             data, addr = recvsocket.recvfrom(1024)
             sport, dport, seq, ack, off, flags, win, sum, urp = struct.unpack(
                     "!HHLLBBHHH", data[:20])
+            print flags
             expected_checksum = sum
             #required because at sender checksum is computed with sum=0
             sum = 0
@@ -46,11 +47,18 @@ class Receiver(object):
             checksum = Common.checksum((tcp_header+msg))
             if checksum !=expected_checksum:
                 print "Checksum failed"
-                print data[20:]
             else:
                 print checksum
-
-
+                
+    
+    def snd_ack(self,seq):
+        """
+        Send the ack for seq number
+        """
+        serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        serversocket.connect((self.sender_IP,self.sender_port))
+        Common.send_msg(serversocket,seq)
+        
 def main():
     """
     Obtains the parameters from the command line and raises a generic exception
@@ -75,7 +83,6 @@ def main():
             sys.exit(0)
         except SystemExit:
             os._exit(0)
-
 
 if __name__ =="__main__":
     main()
