@@ -4,6 +4,7 @@ import Common
 import struct
 import os
 import threading
+import time
 """
 Citations:
 """
@@ -68,7 +69,7 @@ class Sender(object):
         # Initializing Sender state command line variables.
         self.filename       = filename      #sent filename,default 'file.txt'
         self.remote_IP      = remote_IP     #IP for sending,default 127.0.0.1
-        self.remote_port    = remote_port   #Port number
+        self.remote_port    = remote_port   #Port number 20000
         self.ack_port_num   = ack_port_num  #listening port,default 20001
         self.log_filename   = log_filename  #log file ,default send_logfile.txt
         self.window_size    = window_size   #window size,default 1152 bytes
@@ -83,28 +84,30 @@ class Sender(object):
         #Initialize the socket for udt_send
         self.udt_sock       = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,
                         socket.IPPROTO_UDP)
-        self.udt_sock.connect((self.remote_IP, self.remote_port))
-        self.udt_send() 
+        self.udt_send()
     def udt_send(self):
         """
         Unreliably send the data through the channel!!
         """
-        if self.NextSeqNum <self.SendBase+self.N:
-            pkt = self.make_pkt()
+        if self.NextSeqNum < self.SendBase+self.N:
+            pkt,length = self.make_pkt()
             self.send_data(pkt)
-            # if timer.status!=True:
-                # timer.start()
+            timer = threading.Timer(1.0,self.timeout)
+            if not timer.isAlive():
+                timer.start()
+            self.NextSeqNum +=length
+            print self.NextSeqNum
     def make_pkt(self):
         self.file.seek(self.NextSeqNum -1)
         msg = self.file.read(self.MSS)
         pkt = Common.Packet(self.ack_port_num, self.remote_port, 
                 self.NextSeqNum,0,msg)
-        return pkt.pack()
+        return pkt.pack(),len(msg)
     def send_data(self, pkt):
         """
         This just sends the packet over the link!!
         """
-        Common.send_msg(self.udt_sock, pkt) 
+        self.udt_sock.sendto(pkt,(self.remote_IP,self.remote_port)) 
     def timeout(self):
         pass
     def rdt_rcv(self):
@@ -124,6 +127,8 @@ class Sender(object):
         self.file.seek(seek_length)
         current_window = self.file.read(self.window_size)
         return current_window
+
+
 
 
 def main():

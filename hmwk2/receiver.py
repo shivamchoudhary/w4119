@@ -37,7 +37,6 @@ class Receiver(object):
             data, addr = recvsocket.recvfrom(1024)
             sport, dport, seq, ack, off, flags, win, sum, urp = struct.unpack(
                     "!HHLLBBHHH", data[:20])
-            print flags
             expected_checksum = sum
             #required because at sender checksum is computed with sum=0
             sum = 0
@@ -48,9 +47,8 @@ class Receiver(object):
             if checksum !=expected_checksum:
                 print "Checksum failed"
             else:
-                print checksum
+                print "Checksum OK",checksum
                 
-    
     def snd_ack(self,seq):
         """
         Send the ack for seq number
