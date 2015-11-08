@@ -57,11 +57,13 @@ event:FIN BIT set:
     (Proxy Mode)
     make lnkemu
     make testsender
-    make reciever
-    (Without Proxy)
-    make sender
-    make reciever
+    make reciever   \
+    (Without Proxy)  \
+                      Without the Link Emulator  
+    make sender      /
+    make reciever   /
 """
+timer_status = False
 class Sender(object):
 
     def __init__(self, filename, remote_IP, remote_port, ack_port_num,
@@ -76,7 +78,7 @@ class Sender(object):
         # Load file
         self.file           = open(self.filename)   #open the file to be sent.
         # Packet level
-        self.MSS            = 576           #set maximum segment size to 576
+        self.MSS            = 2           #set maximum segment size to 576
         self.N              = self.MSS*self.window_size #set N to MSS*window
         self.InitialSeqNum  = 0
         self.NextSeqNum     = 1
@@ -84,20 +86,29 @@ class Sender(object):
         #Initialize the socket for udt_send
         self.udt_sock       = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,
                         socket.IPPROTO_UDP)
+        self.udt_sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+        self.filesize = os.stat(filename).st_size
+        self.timerStatus = False
         self.udt_send()
     def udt_send(self):
         """
         Unreliably send the data through the channel!!
         """
-        if self.NextSeqNum < self.SendBase+self.N:
-            pkt,length = self.make_pkt()
-            self.send_data(pkt)
-            timer = threading.Timer(1.0,self.timeout)
-            if not timer.isAlive():
-                timer.start()
-            self.NextSeqNum +=length
-            print self.NextSeqNum
+        timer = Timer()
+        while (self.NextSeqNum<self.filesize):
+            if self.NextSeqNum < self.SendBase+self.N:
+                pkt, length = self.make_pkt()
+                self.send_data(pkt)
+                self.NextSeqNum += length
+                if not timer._start.isSet():
+                    timer._start.set()
+                    timer.start()
+                
     def make_pkt(self):
+        """
+        Makes the packet
+        return: packed packet and length of the message
+        """
         self.file.seek(self.NextSeqNum -1)
         msg = self.file.read(self.MSS)
         pkt = Common.Packet(self.ack_port_num, self.remote_port, 
@@ -107,18 +118,21 @@ class Sender(object):
         """
         This just sends the packet over the link!!
         """
-        self.udt_sock.sendto(pkt,(self.remote_IP,self.remote_port)) 
-    def timeout(self):
-        pass
+        self.udt_sock.sendto(pkt,(self.remote_IP,self.remote_port))
     def rdt_rcv(self):
-        acksocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        acksocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        print "Hi"
+        acksocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        acksocket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1) 
         try:
-            acksocket.bind(('localhost', self.ack_port_num))
+            acksocket.bind(('', self.ack_port_num))
         except socket.error as error:
             print ("Socket binding failed with error %s", error)
+            sys.exit(0)
+        acksocket.listen(5)
+        print self.ack_port_num
         while True:
-            acksocket.listen(1)
+            (clientsocket,clientaddress) = acksocket.accept()
+            print clientsocket
     def seekfile(self, seek_length=0):
         """
         Seeks the filename by window size,takes optional argument for 
@@ -127,9 +141,58 @@ class Sender(object):
         self.file.seek(seek_length)
         current_window = self.file.read(self.window_size)
         return current_window
+def listener_thread():
+    print "Listening"
+    acksocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    acksocket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1) 
+    try:
+        acksocket.bind(('', 20001))
+    except socket.error as error:
+        print ("Socket binding failed with error %s", error)
+        sys.exit(0)
+    acksocket.listen(5)
+    while True:
+        (clientsocket,clientaddress) = acksocket.accept()
+        print clientsocket
+    acksocket.close()
 
 
+class StoppableThread(threading.Thread):
+    def __init__(self):
+        super(StoppableThread, self).__init__()
+        self._stop = threading.Event()
+    def run(self):
+        s = socket.socket()
+        # s.settimeout(1)             # Socket will raise exception if nothing received
+        s.bind(('127.0.0.1', 20001))
+        s.listen(1)
+        print("Listening on {}:{}".format(s.getsockname()[0], s.getsockname()[1]))
+        while True:
+            try:
+                conn, addr = s.accept()
+            except socket.error:
+                # Check for stop signal
+                if self._stop.is_set():
+                    print("Shutting down cleanly...")
+                    s.close()
+                    return
 
+
+class Timer(threading.Thread):
+    """
+    Subclassing Thread and setting a property as event
+    Inspired from 
+    https://mikeanthonywild.com/stopping-blocking-threads-in-python-using-
+    gevent-sort-of.html
+    """
+    def __init__(self):
+        super(Timer, self).__init__()
+        self._start = threading.Event()
+    def run(self):
+        if self._start.is_set():
+            time.sleep(1)
+        else:
+            return
 
 def main():
     try:
@@ -155,4 +218,3 @@ def main():
 
 if __name__=="__main__":
     main()
-

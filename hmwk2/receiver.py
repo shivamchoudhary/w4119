@@ -3,7 +3,7 @@ import socket
 import Common
 import struct
 import os
-
+import time
 """
 Citations:
     1) Python's UDP Communication Wiki
@@ -22,7 +22,7 @@ class Receiver(object):
         self.filename = filename                #Receiver outfile.
         self.listening_port = listening_port    #Recieverport number.
         self.sender_IP = sender_IP              #Send ACKs to sender.
-        self.sender_port = sender_port          #sender port number.
+        self.sender_port = sender_port          #ACK port number 20001.
         self.log_filename_receiver = log_filename_receiver # the log_file
         self.createSocket()
     
@@ -32,7 +32,11 @@ class Receiver(object):
         """
         recvsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         recvsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        recvsocket.bind(('localhost', 20000))
+        recvsocket.bind(('localhost', self.listening_port))
+        #acksocket:
+        acksocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        address = ('127.0.0.1',self.sender_port)
+        # acksocket.connect(address)
         while True:
             data, addr = recvsocket.recvfrom(1024)
             sport, dport, seq, ack, off, flags, win, sum, urp = struct.unpack(
@@ -47,16 +51,7 @@ class Receiver(object):
             if checksum !=expected_checksum:
                 print "Checksum failed"
             else:
-                print "Checksum OK",checksum
-                
-    def snd_ack(self,seq):
-        """
-        Send the ack for seq number
-        """
-        serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-        serversocket.connect((self.sender_IP,self.sender_port))
-        Common.send_msg(serversocket,seq)
-        
+                print time.time(), self.sender_IP, seq, ack, flags
 def main():
     """
     Obtains the parameters from the command line and raises a generic exception
