@@ -4,6 +4,7 @@ import Common
 import struct
 import os
 import time
+import threading
 """
 Citations:
     1) Python's UDP Communication Wiki
@@ -33,10 +34,9 @@ class Receiver(object):
         recvsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         recvsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         recvsocket.bind(('localhost', self.listening_port))
-        #acksocket:
-        acksocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        address = ('127.0.0.1',self.sender_port)
-        # acksocket.connect(address)
+        acksocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        address = ('localhost',20001)
+        connect_bit = False
         while True:
             data, addr = recvsocket.recvfrom(1024)
             sport, dport, seq, ack, off, flags, win, sum, urp = struct.unpack(
@@ -52,6 +52,14 @@ class Receiver(object):
                 print "Checksum failed"
             else:
                 print time.time(), self.sender_IP, seq, ack, flags
+                try:
+                    if connect_bit ==False: 
+                        acksocket.connect(address)
+                        connect_bit = True
+                    acksocket.send("hello")
+                except Exception as error:
+                    print "Caught: %s",error
+
 def main():
     """
     Obtains the parameters from the command line and raises a generic exception
@@ -64,6 +72,8 @@ def main():
         sender_port             = int(sys.argv[4])
         log_filename_receiver   = str(sys.argv[5])
         #TODO add the case in which the logging is done on stdout
+        # t1 = ackSender()
+        # t1.start()
         Receiver(filename, listening_port, sender_IP, sender_port,
                 log_filename_receiver)
     except IndexError:

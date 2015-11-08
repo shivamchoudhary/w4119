@@ -141,12 +141,13 @@ class Sender(object):
         self.file.seek(seek_length)
         current_window = self.file.read(self.window_size)
         return current_window
+
 def listener_thread():
     print "Listening"
     acksocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     acksocket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1) 
     try:
-        acksocket.bind(('', 20001))
+        acksocket.bind(('localhost', 20001))
     except socket.error as error:
         print ("Socket binding failed with error %s", error)
         sys.exit(0)
@@ -154,7 +155,6 @@ def listener_thread():
     while True:
         (clientsocket,clientaddress) = acksocket.accept()
         print clientsocket
-    acksocket.close()
 
 
 class StoppableThread(threading.Thread):
@@ -177,6 +177,32 @@ class StoppableThread(threading.Thread):
                     s.close()
                     return
 
+
+class recvAcks(threading.Thread):
+    def __init__(self):
+        super (recvAcks,self).__init__()
+        self._start = threading.Event()
+        self._stop = threading.Event()
+    
+    def run(self):
+        s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+        s.bind(('localhost',20001))
+        s.listen(1)
+        if self._start.isSet():
+            print "Listening for ACKS",time.time()
+            while True:
+                try:
+                    client,addr = s.accept()
+                    data = client.recv(1024)
+                    if data:
+                        print data
+                        client.close()
+                except socket.error:
+                    if self._stop.isSet():
+                        print "Graceful Shutdown"
+                        s.close()
+                        return
 
 class Timer(threading.Thread):
     """
@@ -202,8 +228,13 @@ def main():
         ack_port_num    = int(sys.argv[4])
         log_filename    = str(sys.argv[5])
         window_size     = int(sys.argv[6])
+        t1 = recvAcks()
+        t1._start.set()
+        t1.deamon = True
+        t1.start()
         Sender(filename, remote_IP, remote_port, ack_port_num, log_filename, 
                 window_size)
+
     #TODO Adding support when the log_filename=stdout log to stdout.
     except IndexError:
         print "python sender.py <filename> <remote_IP> <remote_port>",\
@@ -213,6 +244,7 @@ def main():
         print 'Control -C pressed!!'
         try:
             sys.exit(0)
+            t1._stop.set()
         except SystemExit:
             os._exit(0)
 
