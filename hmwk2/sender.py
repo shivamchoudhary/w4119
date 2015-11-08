@@ -89,6 +89,7 @@ class Sender(object):
         self.udt_sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.filesize = os.stat(filename).st_size
         self.timerStatus = False
+        self.wait_bit = False
         self.udt_send()
     def udt_send(self):
         """
@@ -118,6 +119,10 @@ class Sender(object):
         """
         This just sends the packet over the link!!
         """
+        #for synchronization purpose the listener thread was not able to keep up
+        if self.wait_bit==False:
+            time.sleep(0.5)
+            self.wait_bit = True
         self.udt_sock.sendto(pkt,(self.remote_IP,self.remote_port))
     def rdt_rcv(self):
         print "Hi"
@@ -177,7 +182,6 @@ class StoppableThread(threading.Thread):
                     s.close()
                     return
 
-
 class recvAcks(threading.Thread):
     def __init__(self):
         super (recvAcks,self).__init__()
@@ -197,7 +201,6 @@ class recvAcks(threading.Thread):
                     data = client.recv(1024)
                     if data:
                         print data
-                        client.close()
                 except socket.error:
                     if self._stop.isSet():
                         print "Graceful Shutdown"

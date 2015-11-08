@@ -53,10 +53,10 @@ class Receiver(object):
             else:
                 print time.time(), self.sender_IP, seq, ack, flags
                 try:
-                    if connect_bit ==False: 
+                    if connect_bit ==False:
                         acksocket.connect(address)
                         connect_bit = True
-                    acksocket.send("hello")
+                    acksocket.sendall("Hello"+str(seq))
                 except Exception as error:
                     print "Caught: %s",error
 
