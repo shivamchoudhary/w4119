@@ -45,10 +45,12 @@ class Packet(object):
         return packet
 class log(object):
     
-    def __init__(self,source,destination,EstimatedRTT_bit = False):
+    def __init__(self, source, destination, logging_method, 
+            EstimatedRTT_bit = False):
         self.source = source
         self.destination = destination
         self.fin = 0
+        self.logging_method = logging_method
         self.EstimatedRTT_bit = EstimatedRTT_bit
     def sequence(self, Sequence):
         self.Sequence = Sequence
@@ -59,12 +61,15 @@ class log(object):
     def EstimatedRTT(self,EstimatedRTT):
         self.estimate = EstimatedRTT
         self.estimate = "EST_RTT "+str(self.estimate)
-    def write(self,f):
+    def write(self,f=None):
         logline = str(time.time())+" "+"Source "+str(self.source)+" "+"Destination" +" "+str(self.destination)+" "+str(self.Sequence)+" "+str(self.ACK)+" "+"Fin "+str(self.fin)
         if self.EstimatedRTT_bit:
             logline = str(logline)+" "+str(self.estimate)
-        f.write(format(logline))
-        f.write("\n")
+        if self.logging_method:
+            f.write(format(logline))
+            f.write("\n")
+        else:
+            print logline
 def checksum(msg):
         """
         Computing the checksum taking two consequetive bits at a time.

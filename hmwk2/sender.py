@@ -7,9 +7,6 @@ import threading
 import time
 import select
 """
-Citations:
-"""
-"""
 Sender FSM:-
 1)Architecture as per assignment:-
             Proxy(port 41192)
@@ -58,11 +55,10 @@ event:FIN BIT set:
     (Proxy Mode)
     make lnkemu
     make testsender
-    make reciever   \
-    (Without Proxy)  \
-                      Without the Link Emulator  
-    make sender      /
-    make reciever   /
+    make receiver   
+    (Without Proxy)  
+    make receiver
+    make sender      
 """
 timer_status = False
 class Sender(object):
@@ -73,7 +69,12 @@ class Sender(object):
         self.remote_IP      = remote_IP     #IP for sending,default 127.0.0.1
         self.remote_port    = remote_port   #Port number 20000
         self.ack_port_num   = ack_port_num  #listening port,default 20001
-        self.log_filename   = open(log_filename,'w+')#default send_logfile.txt
+        if log_filename!="stdout":
+            self.log_filename   = open(log_filename,'w+')#send_logfile.txt
+            self.logging_method = True
+        else:
+            self.log_filename = None
+            self.logging_method=False
         self.window_size    = window_size   #window size,default 1152 bytes
         # Load file
         self.file           = open(self.filename)   #open the file to be sent.
@@ -108,7 +109,8 @@ class Sender(object):
         EstimatedRTT = 2
         numpackets = 0
         stats = Stats()
-        log = Common.log(self.remote_port,self.ack_port_num,EstimatedRTT_bit=True)
+        log = Common.log(self.remote_port,self.ack_port_num,
+                self.logging_method,EstimatedRTT_bit=True)
         while (self.NextSeqNum<self.filesize):
             numpackets+=1
             if numpackets ==self.numpackets:
@@ -130,20 +132,19 @@ class Sender(object):
                 r,a,b = select.select([clientsocket],[],[],TimeoutInterval)
                 if r:
                     data = clientsocket.recv(1024)
-                    print data
+                    # print data
                     log.EstimatedRTT(EstimatedRTT)
                     log.ack(data)
                     log.write(self.log_filename)
                     EstimatedRTT = time.time()-send_time
                     break
                 if not r:
-                    print "Timeout"
+                    # print "Timeout"
                     self.send_data(pkt)
                     stats.updateTotalBytesSent(int(length))
                     stats.updateSegmentsSent()
                     stats.updateSegmentsRestransmitted()
         stats.printStats()
-        self.log_filename.close()
     def make_pkt(self):
         """
         Makes the packet

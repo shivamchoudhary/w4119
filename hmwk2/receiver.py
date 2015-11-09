@@ -24,7 +24,12 @@ class Receiver(object):
         self.listening_port = listening_port    #Recieverport number.
         self.sender_IP = sender_IP              #Send ACKs to sender.
         self.sender_port = sender_port          #ACK port number 20001.
-        self.log_filename_receiver = open(log_filename_receiver,'w+') # the log_file
+        if log_filename_receiver!="stdout":
+            self.log_filename_receiver = open(log_filename_receiver,'w+') # the log_file
+            self.logging_method = True
+        else:
+            self.log_filename_receiver = None
+            self.logging_method = False
         self.expected_seqnum = 1
         self.createSocket()
     
@@ -38,7 +43,7 @@ class Receiver(object):
         acksocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         address = ('localhost',self.sender_port)
         opened = False
-        log = Common.log(self.sender_port,self.listening_port)
+        log = Common.log(self.sender_port,self.listening_port,self.logging_method)
         while True:
             data, addr = recvsocket.recvfrom(1024)
             sport, dport, seq, ack, off, flags, win, sum, urp = struct.unpack(
@@ -54,7 +59,6 @@ class Receiver(object):
                 print "Checksum failed"
             else:
                 if self.expected_seqnum == seq:
-                    print time.time(), self.sender_IP, seq, ack, flags
                     self.filename.write(msg)
                     log.sequence(self.expected_seqnum)
                     log.ack(self.expected_seqnum)
@@ -86,8 +90,6 @@ def main():
         sender_port             = int(sys.argv[4])
         log_filename_receiver   = str(sys.argv[5])
         #TODO add the case in which the logging is done on stdout
-        # t1 = ackSender()
-        # t1.start()
         Receiver(filename, listening_port, sender_IP, sender_port,
                 log_filename_receiver)
     except IndexError:
