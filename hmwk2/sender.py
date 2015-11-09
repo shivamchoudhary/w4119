@@ -243,7 +243,6 @@ def main():
         Sender(filename, remote_IP, remote_port, ack_port_num, log_filename, 
                 window_size)
 
-    #TODO Adding support when the log_filename=stdout log to stdout.
     except IndexError:
         print "python sender.py <filename> <remote_IP> <remote_port>",\
         "<ack_port_num> <log_filename> <window_size>" 
