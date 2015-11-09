@@ -21,7 +21,7 @@ lnkemu_port :=41192
 sender:
 	python sender.py $(input_filename) $(remote_IP) $(remote_port) $(ack_port_num)  $(log_filename_sender) $(window_size)
 
-reciever:
+receiver:
 	python receiver.py $(output_filename) $(listening_port) $(sender_IP) $(sender_port) $(log_filename_receiver)
 
 lnkemu:
@@ -31,4 +31,4 @@ testsender:
 	python sender.py $(filename) $(remote_IP) $(lnkemu_port) $(ack_port_num)  $(log_filename_sender) $(window_size)
 
 clean:
-	rm *.pyc logfile.txt
+	rm *.pyc $(log_filename_receiver) $(log_filename_sender) $(output_filename)
