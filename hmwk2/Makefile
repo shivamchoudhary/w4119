@@ -28,7 +28,7 @@ lnkemu:
 	./newudpl -i 127.0.0.1:* -o 127.0.0.1:$(remote_port) -B 1000 -vv
 
 testsender:
-	python sender.py $(filename) $(remote_IP) $(lnkemu_port) $(ack_port_num)  $(log_filename_sender) $(window_size)
+	python sender.py $(input_filename) $(remote_IP) $(lnkemu_port) $(ack_port_num)  $(log_filename_sender) $(window_size)
 
 clean:
 	rm *.pyc $(log_filename_receiver) $(log_filename_sender) $(output_filename)
