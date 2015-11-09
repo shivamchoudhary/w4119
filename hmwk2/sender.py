@@ -78,7 +78,7 @@ class Sender(object):
         # Load file
         self.file           = open(self.filename)   #open the file to be sent.
         # Packet level
-        self.MSS            = 10           #set maximum segment size to 576
+        self.MSS            = 2           #set maximum segment size to 576
         self.N              = self.MSS*self.window_size #set N to MSS*window
         self.InitialSeqNum  = 0
         self.NextSeqNum     = 1
@@ -100,7 +100,7 @@ class Sender(object):
         self.acksocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1)
         connected = False
         try:
-            self.acksocket.bind(('localhost',20001))
+            self.acksocket.bind(('localhost',self.ack_port_num))
         except socket.error as e:
             print "Socket Error %s"%e
         self.acksocket.listen(6)
@@ -133,7 +133,7 @@ class Sender(object):
         self.file.seek(self.NextSeqNum -1)
         msg = self.file.read(self.MSS)
         fin = 0
-        if len(msg) <self.MSS:
+        if self.NextSeqNum +1 >=self.filesize:
             fin =1
         pkt = Common.Packet(self.ack_port_num, self.remote_port, 
                 self.NextSeqNum,fin,msg)
