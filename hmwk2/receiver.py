@@ -20,7 +20,7 @@ class Receiver(object):
         """
         Initializing the Receiver state.
         """
-        self.filename = open(filename,'w')      #Receiver outfile.
+        self.filename = open(filename,'w+')      #Receiver outfile.
         self.listening_port = listening_port    #Recieverport number.
         self.sender_IP = sender_IP              #Send ACKs to sender.
         self.sender_port = sender_port          #ACK port number 20001.
