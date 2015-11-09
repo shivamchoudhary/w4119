@@ -3,7 +3,8 @@ TCP Protocol
 NAME Simple TCP-like transport-layer protocol!!
         
 DESCRIPTION:
-TCP Segment structure:- According to RFC 793
+
+1)TCP Segment structure:- According to RFC 793
 ##############################################################################
 0                   1                   2                   3   
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 
@@ -25,7 +26,8 @@ TCP Segment structure:- According to RFC 793
    |                             data                              |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 _______________________________________________________________________________
-Sender Side FSM:-
+
+2)Sender Side FSM:-
 ##############################################################################
 Initialize:
     N = window_size * MSS
@@ -48,7 +50,8 @@ event: ACK recieved:
         if no currently unack seg:
             start timer
 _______________________________________________________________________________
-Receiver Side FSM:-
+
+3)Receiver Side FSM:-
 ##############################################################################
 Initialize:
     ExpectedSeqNumber = 1
@@ -60,6 +63,13 @@ event:recv_data and finnotset
 event:FIN BIT set:
     write_to_file
     send_ack()
+_______________________________________________________________________________
+
+4) Loss Recovery Mechanism:-
+The sender after sending a packet updates its TIMEOUT variable and if it doesn't
+get the ACK back in that timeout it sends the packet again.
+The reciever if receives a packet which has different seqnumber from what it 
+expects it just drops it else it writes into the file.
 _______________________________________________________________________________
 INSTALLATION:The make file has some of the interesting options which help a lot
 while testing. Just unzip the file and it should be good to go!!
