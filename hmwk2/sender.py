@@ -78,11 +78,12 @@ class Sender(object):
         # Load file
         self.file           = open(self.filename)   #open the file to be sent.
         # Packet level
-        self.MSS            = 2           #set maximum segment size to 576
+        self.MSS            = 10           #set maximum segment size to 576
         self.N              = self.MSS*self.window_size #set N to MSS*window
         self.InitialSeqNum  = 0
         self.NextSeqNum     = 1
         self.SendBase       = self.InitialSeqNum
+        self.fin            = 0
         #Initialize the socket for udt_send
         self.udt_sock       = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,
                         socket.IPPROTO_UDP)
@@ -90,6 +91,7 @@ class Sender(object):
         self.filesize = os.stat(filename).st_size
         #
         self.acksocket_initial = False
+        self.numpackets = int(self.filesize/self.MSS)+(self.filesize%self.MSS>0)
         self.udt_send()
     
     def udt_send(self):
@@ -105,7 +107,11 @@ class Sender(object):
             print "Socket Error %s"%e
         self.acksocket.listen(6)
         EstimatedRTT = 2
+        numpackets = 0
         while (self.NextSeqNum<self.filesize):
+            numpackets+=1
+            if numpackets ==self.numpackets:
+                self.fin = 1
             TimeoutInterval = RTT()
             TimeoutInterval = TimeoutInterval.update(EstimatedRTT)
             pkt, length = self.make_pkt()
@@ -132,11 +138,8 @@ class Sender(object):
         """
         self.file.seek(self.NextSeqNum -1)
         msg = self.file.read(self.MSS)
-        fin = 0
-        if self.NextSeqNum +1 >=self.filesize:
-            fin =1
         pkt = Common.Packet(self.ack_port_num, self.remote_port, 
-                self.NextSeqNum,fin,msg)
+                self.NextSeqNum,self.fin,msg)
         return pkt.pack(),len(msg)
     
     def send_data(self, pkt):
