@@ -108,14 +108,14 @@ class Sender(object):
         EstimatedRTT = 2
         numpackets = 0
         stats = Stats()
-        log = Common.log(self.remote_port,self.ack_port_num)
+        log = Common.log(self.remote_port,self.ack_port_num,EstimatedRTT_bit=True)
         while (self.NextSeqNum<self.filesize):
             numpackets+=1
             if numpackets ==self.numpackets:
                 self.fin = 1
                 log.fin = 1
             TimeoutInterval = RTT()
-            TimeoutInterval = TimeoutInterval.update(EstimatedRTT)
+            TimeoutInterval,EstimatedRTT = TimeoutInterval.update(EstimatedRTT)
             pkt, length = self.make_pkt()
             self.send_data(pkt)
             send_time = time.time()
@@ -131,6 +131,7 @@ class Sender(object):
                 if r:
                     data = clientsocket.recv(1024)
                     print data
+                    log.EstimatedRTT(EstimatedRTT)
                     log.ack(data)
                     log.write(self.log_filename)
                     EstimatedRTT = time.time()-send_time
@@ -229,7 +230,7 @@ class RTT():
         EstimatedRTT = (0.875)*EstimatedRTT + 0.125*self.SampleRTT
         self.DevRTT = 0.75*self.DevRTT +0.25*(self.SampleRTT-EstimatedRTT)
         self.TimeoutInterval = EstimatedRTT +4*self.DevRTT
-        return self.TimeoutInterval
+        return self.TimeoutInterval,EstimatedRTT
 
 class StoppableThread(threading.Thread):
     def __init__(self):

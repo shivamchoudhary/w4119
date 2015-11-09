@@ -45,20 +45,24 @@ class Packet(object):
         return packet
 class log(object):
     
-    def __init__(self,source,destination):
+    def __init__(self,source,destination,EstimatedRTT_bit = False):
         self.source = source
         self.destination = destination
-        self.fin = 0 
+        self.fin = 0
+        self.EstimatedRTT_bit = EstimatedRTT_bit
     def sequence(self, Sequence):
         self.Sequence = Sequence
-        self.Sequence = "Sequence "+str(self.Sequence)
-    
+        self.Sequence = "Sequence "+str(self.Sequence) 
     def ack(self, ACK):
         self.ACK = ACK
-        self.ACK = "ACK " +str(self.ACK)
-    
+        self.ACK = "ACK " +str(self.ACK) 
+    def EstimatedRTT(self,EstimatedRTT):
+        self.estimate = EstimatedRTT
+        self.estimate = "EST_RTT "+str(self.estimate)
     def write(self,f):
-        logline = time.time(),self.source,self.destination,self.Sequence,self.ACK,self.fin
+        logline = str(time.time())+" "+"Source "+str(self.source)+" "+"Destination" +" "+str(self.destination)+" "+str(self.Sequence)+" "+str(self.ACK)+" "+"Fin "+str(self.fin)
+        if self.EstimatedRTT_bit:
+            logline = str(logline)+" "+str(self.estimate)
         f.write(format(logline))
         f.write("\n")
 def checksum(msg):
@@ -73,27 +77,4 @@ def checksum(msg):
             s = (s>>16) + (s & 0xffff);
             s = ~s & 0xffff
         return s
-"""
-I created these functions while coding the first assignment so I am using it 
-directly.
-"""
-def send_msg(sock, msg):
-    msg = struct.pack('>I', len(msg)) + msg
-    sock.sendall(msg)
-
-def recv_msg(sock):
-    raw_msglen = recvall(sock, 4)
-    if not raw_msglen:
-        return None
-    msglen = struct.unpack('>I', raw_msglen)[0]
-    return recvall(sock, msglen)
-
-def recvall(sock, n):
-    data = ''
-    while len(data) < n:
-        packet = sock.recv(n - len(data))
-        if not packet:
-            return None
-        data += packet
-    return data
 

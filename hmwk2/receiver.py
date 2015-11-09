@@ -24,7 +24,7 @@ class Receiver(object):
         self.listening_port = listening_port    #Recieverport number.
         self.sender_IP = sender_IP              #Send ACKs to sender.
         self.sender_port = sender_port          #ACK port number 20001.
-        self.log_filename_receiver = log_filename_receiver # the log_file
+        self.log_filename_receiver = open(log_filename_receiver,'w+') # the log_file
         self.expected_seqnum = 1
         self.createSocket()
     
@@ -36,8 +36,9 @@ class Receiver(object):
         recvsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         recvsocket.bind(('localhost', self.listening_port))
         acksocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        address = ('localhost',20001)
+        address = ('localhost',self.sender_port)
         opened = False
+        log = Common.log(self.sender_port,self.listening_port)
         while True:
             data, addr = recvsocket.recvfrom(1024)
             sport, dport, seq, ack, off, flags, win, sum, urp = struct.unpack(
@@ -55,6 +56,8 @@ class Receiver(object):
                 if self.expected_seqnum == seq:
                     print time.time(), self.sender_IP, seq, ack, flags
                     self.filename.write(msg)
+                    log.sequence(self.expected_seqnum)
+                    log.ack(self.expected_seqnum)
                     self.expected_seqnum +=len(msg)
                     try:
                         if not opened:
@@ -63,8 +66,12 @@ class Receiver(object):
                         # time.sleep(3)
                         acksocket.sendall(str(seq))
                         if flags ==1:
+                            print "Delivery completed successfully"
                             self.filename.close()
+                            log.fin = 1
+                            log.write(self.log_filename_receiver)
                             sys.exit()
+                        log.write(self.log_filename_receiver)
                     except Exception as error:
                         print "Caught: %s",error
 
