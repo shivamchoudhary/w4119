@@ -56,6 +56,7 @@ class Receiver(object):
                     if not opened:
                         acksocket.connect(address)
                         opened = True
+                    time.sleep(3)
                     acksocket.sendall(str(seq))
                     # acksocket.close()
                 except Exception as error:

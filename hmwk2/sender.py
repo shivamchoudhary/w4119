@@ -88,11 +88,6 @@ class Sender(object):
                         socket.IPPROTO_UDP)
         self.udt_sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.filesize = os.stat(filename).st_size
-        #Timeout Initialization
-        self.SampleRTT = 2
-        self.EstimatedRTT = 2
-        self.DevRTT = 0
-        self.TimeoutInterval = 1
         #
         self.acksocket_initial = False
         self.udt_send()
@@ -109,22 +104,28 @@ class Sender(object):
         except socket.error as e:
             print "Socket Error %s"%e
         self.acksocket.listen(6)
+        EstimatedRTT = 2
         while (self.NextSeqNum<self.filesize):
+            TimeoutInterval = RTT()
+            TimeoutInterval = TimeoutInterval.update(EstimatedRTT)
+            print TimeoutInterval, EstimatedRTT
             pkt, length = self.make_pkt()
             self.send_data(pkt)
             send_time = time.time()
             self.NextSeqNum += length
-            print send_time
             if not connected:
                 clientsocket,clientaddress = self.acksocket.accept()
                 connected = True
-            data = clientsocket.recv(1024)
-            if data:
-                print data
-                recv_time = time.time()
-                print recv_time - send_time
-            self.rtt()
-
+            while True:
+                r,a,b = select.select([clientsocket],[],[],TimeoutInterval)
+                if r:
+                    data = clientsocket.recv(1024)
+                    print data
+                    EstimatedRTT = time.time()-send_time
+                    break
+                if not r:
+                    print "Timeout"
+                    self.send_data(pkt)
     def make_pkt(self):
         """
         Makes the packet
@@ -142,11 +143,6 @@ class Sender(object):
         """
         self.udt_sock.sendto(pkt,(self.remote_IP,self.remote_port))
     
-    def rtt(self):
-       self.EstimatedRTT = (0.875)*self.EstimatedRTT + 0.125*self.SampleRTT
-       self.DevRTT = 0.75*self.DevRTT +0.25*(self.SampleRTT-self.EstimatedRTT)
-       self.TimeoutInterval = self.EstimatedRTT +4*self.DevRTT
-
     def seekfile(self, seek_length=0):
         """
         Seeks the filename by window size,takes optional argument for 
@@ -164,7 +160,27 @@ class Sender(object):
             # clientsocket.close()
             break
 
-       
+class RTT():
+    """
+    Keeps track of RTT,
+    """
+    def __init__(self):
+        """
+        Init all vals except Estimated RTT
+        """
+        self.SampleRTT = 2
+        self.DevRTT = 0
+        self.TimeoutInterval =1
+    def update(self,EstimatedRTT):
+        """
+        param EstimatedRTT: The difference between send_packet time and 
+        recieving the acks
+        """
+        EstimatedRTT = (0.875)*EstimatedRTT + 0.125*self.SampleRTT
+        self.DevRTT = 0.75*self.DevRTT +0.25*(self.SampleRTT-EstimatedRTT)
+        self.TimeoutInterval = EstimatedRTT +4*self.DevRTT
+        return self.TimeoutInterval
+
 class StoppableThread(threading.Thread):
     def __init__(self):
         super(StoppableThread, self).__init__()
