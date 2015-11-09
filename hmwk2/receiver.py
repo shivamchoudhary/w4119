@@ -36,7 +36,7 @@ class Receiver(object):
         recvsocket.bind(('localhost', self.listening_port))
         acksocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         address = ('localhost',20001)
-        connect_bit = False
+        opened = False
         while True:
             data, addr = recvsocket.recvfrom(1024)
             sport, dport, seq, ack, off, flags, win, sum, urp = struct.unpack(
@@ -53,10 +53,11 @@ class Receiver(object):
             else:
                 print time.time(), self.sender_IP, seq, ack, flags
                 try:
-                    if connect_bit ==False:
+                    if not opened:
                         acksocket.connect(address)
-                        connect_bit = True
-                    acksocket.sendall("Hello"+str(seq))
+                        opened = True
+                    acksocket.sendall(str(seq))
+                    # acksocket.close()
                 except Exception as error:
                     print "Caught: %s",error
 

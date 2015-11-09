@@ -5,6 +5,7 @@ import struct
 import os
 import threading
 import time
+import select
 """
 Citations:
 """
@@ -65,7 +66,6 @@ event:FIN BIT set:
 """
 timer_status = False
 class Sender(object):
-
     def __init__(self, filename, remote_IP, remote_port, ack_port_num,
             log_filename, window_size):
         # Initializing Sender state command line variables.
@@ -88,23 +88,43 @@ class Sender(object):
                         socket.IPPROTO_UDP)
         self.udt_sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.filesize = os.stat(filename).st_size
-        self.timerStatus = False
-        self.wait_bit = False
+        #Timeout Initialization
+        self.SampleRTT = 2
+        self.EstimatedRTT = 2
+        self.DevRTT = 0
+        self.TimeoutInterval = 1
+        #
+        self.acksocket_initial = False
         self.udt_send()
+    
     def udt_send(self):
         """
         Unreliably send the data through the channel!!
         """
-        timer = Timer()
+        self.acksocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.acksocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR,1)
+        connected = False
+        try:
+            self.acksocket.bind(('localhost',20001))
+        except socket.error as e:
+            print "Socket Error %s"%e
+        self.acksocket.listen(6)
         while (self.NextSeqNum<self.filesize):
-            if self.NextSeqNum < self.SendBase+self.N:
-                pkt, length = self.make_pkt()
-                self.send_data(pkt)
-                self.NextSeqNum += length
-                if not timer._start.isSet():
-                    timer._start.set()
-                    timer.start()
-                
+            pkt, length = self.make_pkt()
+            self.send_data(pkt)
+            send_time = time.time()
+            self.NextSeqNum += length
+            print send_time
+            if not connected:
+                clientsocket,clientaddress = self.acksocket.accept()
+                connected = True
+            data = clientsocket.recv(1024)
+            if data:
+                print data
+                recv_time = time.time()
+                print recv_time - send_time
+            self.rtt()
+
     def make_pkt(self):
         """
         Makes the packet
@@ -115,29 +135,18 @@ class Sender(object):
         pkt = Common.Packet(self.ack_port_num, self.remote_port, 
                 self.NextSeqNum,0,msg)
         return pkt.pack(),len(msg)
+    
     def send_data(self, pkt):
         """
         This just sends the packet over the link!!
         """
-        #for synchronization purpose the listener thread was not able to keep up
-        if self.wait_bit==False:
-            time.sleep(0.5)
-            self.wait_bit = True
         self.udt_sock.sendto(pkt,(self.remote_IP,self.remote_port))
-    def rdt_rcv(self):
-        print "Hi"
-        acksocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        acksocket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1) 
-        try:
-            acksocket.bind(('', self.ack_port_num))
-        except socket.error as error:
-            print ("Socket binding failed with error %s", error)
-            sys.exit(0)
-        acksocket.listen(5)
-        print self.ack_port_num
-        while True:
-            (clientsocket,clientaddress) = acksocket.accept()
-            print clientsocket
+    
+    def rtt(self):
+       self.EstimatedRTT = (0.875)*self.EstimatedRTT + 0.125*self.SampleRTT
+       self.DevRTT = 0.75*self.DevRTT +0.25*(self.SampleRTT-self.EstimatedRTT)
+       self.TimeoutInterval = self.EstimatedRTT +4*self.DevRTT
+
     def seekfile(self, seek_length=0):
         """
         Seeks the filename by window size,takes optional argument for 
@@ -146,29 +155,22 @@ class Sender(object):
         self.file.seek(seek_length)
         current_window = self.file.read(self.window_size)
         return current_window
+    def ack_rcv(self):
+        while True:
+            (clientsocket, clientaddress) = self.acksocket.accept()
+            data = clientsocket.recv(1024)
+            if data:
+                print data
+            # clientsocket.close()
+            break
 
-def listener_thread():
-    print "Listening"
-    acksocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    acksocket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1) 
-    try:
-        acksocket.bind(('localhost', 20001))
-    except socket.error as error:
-        print ("Socket binding failed with error %s", error)
-        sys.exit(0)
-    acksocket.listen(5)
-    while True:
-        (clientsocket,clientaddress) = acksocket.accept()
-        print clientsocket
-
-
+       
 class StoppableThread(threading.Thread):
     def __init__(self):
         super(StoppableThread, self).__init__()
         self._stop = threading.Event()
     def run(self):
         s = socket.socket()
-        # s.settimeout(1)             # Socket will raise exception if nothing received
         s.bind(('127.0.0.1', 20001))
         s.listen(1)
         print("Listening on {}:{}".format(s.getsockname()[0], s.getsockname()[1]))
@@ -189,15 +191,16 @@ class recvAcks(threading.Thread):
         self._stop = threading.Event()
     
     def run(self):
-        s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        s.bind(('localhost',20001))
-        s.listen(1)
+        server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        server.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+        server.bind(('localhost', 20001))
+        server.listen(5)
         if self._start.isSet():
             print "Listening for ACKS",time.time()
+            client,addr  = server.accept()
             while True:
+                # client,addr = server.accept()
                 try:
-                    client,addr = s.accept()
                     data = client.recv(1024)
                     if data:
                         print data
@@ -231,10 +234,10 @@ def main():
         ack_port_num    = int(sys.argv[4])
         log_filename    = str(sys.argv[5])
         window_size     = int(sys.argv[6])
-        t1 = recvAcks()
-        t1._start.set()
-        t1.deamon = True
-        t1.start()
+        # t1 = recvAcks()
+        # t1._start.set()
+        # t1.deamon = True
+        # t1.start()
         Sender(filename, remote_IP, remote_port, ack_port_num, log_filename, 
                 window_size)
 
