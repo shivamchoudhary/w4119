@@ -25,6 +25,7 @@ class Receiver(object):
         self.sender_IP = sender_IP              #Send ACKs to sender.
         self.sender_port = sender_port          #ACK port number 20001.
         self.log_filename_receiver = log_filename_receiver # the log_file
+        self.expected_seqnum = 1
         self.createSocket()
     
     def createSocket(self):
@@ -51,16 +52,21 @@ class Receiver(object):
             if checksum !=expected_checksum:
                 print "Checksum failed"
             else:
-                print time.time(), self.sender_IP, seq, ack, flags
-                try:
-                    if not opened:
-                        acksocket.connect(address)
-                        opened = True
-                    time.sleep(3)
-                    acksocket.sendall(str(seq))
+                if self.expected_seqnum == seq:
+                    print time.time(), self.sender_IP, seq, ack, flags
+                    self.expected_seqnum +=len(msg)
+                    try:
+                        if not opened:
+                            acksocket.connect(address)
+                            opened = True
+                        time.sleep(3)
+                        acksocket.sendall(str(seq))
+                        if flags ==1:
+                            print "Last packet"
+                            sys.exit()
                     # acksocket.close()
-                except Exception as error:
-                    print "Caught: %s",error
+                    except Exception as error:
+                        print "Caught: %s",error
 
 def main():
     """

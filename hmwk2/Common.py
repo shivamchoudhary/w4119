@@ -39,11 +39,9 @@ class Packet(object):
         self.sum = checksum((tcp_header+self.msg))
         tcp_header = struct.pack("!HHLLBBHHH", self.sport, self.dport, self.seq,
                 self.ack, self.off, self.flags, self.win, self.sum, self.win)
+
         packet = tcp_header+self.msg
         return packet
-    def printAll(self):
-        members = [attr for attr in dir(Packet()) if not callable(attr) and not attr.startswith("__")]
-        print members
     
 def checksum(msg):
         """

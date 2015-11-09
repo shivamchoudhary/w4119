@@ -78,7 +78,7 @@ class Sender(object):
         # Load file
         self.file           = open(self.filename)   #open the file to be sent.
         # Packet level
-        self.MSS            = 2           #set maximum segment size to 576
+        self.MSS            = 10           #set maximum segment size to 576
         self.N              = self.MSS*self.window_size #set N to MSS*window
         self.InitialSeqNum  = 0
         self.NextSeqNum     = 1
@@ -108,7 +108,6 @@ class Sender(object):
         while (self.NextSeqNum<self.filesize):
             TimeoutInterval = RTT()
             TimeoutInterval = TimeoutInterval.update(EstimatedRTT)
-            print TimeoutInterval, EstimatedRTT
             pkt, length = self.make_pkt()
             self.send_data(pkt)
             send_time = time.time()
@@ -133,8 +132,11 @@ class Sender(object):
         """
         self.file.seek(self.NextSeqNum -1)
         msg = self.file.read(self.MSS)
+        fin = 0
+        if len(msg) <self.MSS:
+            fin =1
         pkt = Common.Packet(self.ack_port_num, self.remote_port, 
-                self.NextSeqNum,0,msg)
+                self.NextSeqNum,fin,msg)
         return pkt.pack(),len(msg)
     
     def send_data(self, pkt):
