@@ -71,16 +71,27 @@ get the ACK back in that timeout it sends the packet again.
 The reciever if receives a packet which has different seqnumber from what it 
 expects it just drops it else it writes into the file.
 _______________________________________________________________________________
-INSTALLATION:The make file has some of the interesting options which help a lot
+
+INSTALLATION:
+###############################################################################
+The make file has some of the interesting options which help a lot
 while testing. Just unzip the file and it should be good to go!!
+_______________________________________________________________________________
+
 OPTIONS:
+###############################################################################
 Makefile Options:
-lnkemu:- This will start the linkemulator with default BIT error rate of 1000
-testsender:- Combine this when you are running with the linkemulator,it will 
-pass the arguments to the link emulator port.
-sender: This is for standalone operation with default port numbers specified
-receiver: This is the only option for receiver with some defaults specified.
+make lnkemu:- This will start the linkemulator with default BIT error rate 
+of 1000.
+make testsender:- Combine this when you are running with the linkemulator,it 
+will pass the arguments to the link emulator port.
+make sender: This is for standalone operation with default port numbers specified
+make receiver: This is the only option for receiver with some defaults specified.
+_______________________________________________________________________________
+
 USAGE:
+###############################################################################
 make receiver host the reciever on port 20000 and localhost.
 make sender host the sender on port 20001 and localhost.
+_______________________________________________________________________________
 Last updated: 11/9/2015
