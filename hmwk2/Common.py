@@ -1,4 +1,5 @@
 import struct
+import time
 """
 Citations:
     1. Python struct Module 
@@ -42,7 +43,24 @@ class Packet(object):
 
         packet = tcp_header+self.msg
         return packet
+class log(object):
     
+    def __init__(self,source,destination):
+        self.source = source
+        self.destination = destination
+        self.fin = 0 
+    def sequence(self, Sequence):
+        self.Sequence = Sequence
+        self.Sequence = "Sequence "+str(self.Sequence)
+    
+    def ack(self, ACK):
+        self.ACK = ACK
+        self.ACK = "ACK " +str(self.ACK)
+    
+    def write(self,f):
+        logline = time.time(),self.source,self.destination,self.Sequence,self.ACK,self.fin
+        f.write(format(logline))
+        f.write("\n")
 def checksum(msg):
         """
         Computing the checksum taking two consequetive bits at a time.

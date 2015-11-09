@@ -73,7 +73,7 @@ class Sender(object):
         self.remote_IP      = remote_IP     #IP for sending,default 127.0.0.1
         self.remote_port    = remote_port   #Port number 20000
         self.ack_port_num   = ack_port_num  #listening port,default 20001
-        self.log_filename   = log_filename  #log file ,default send_logfile.txt
+        self.log_filename   = open(log_filename,'w+')#default send_logfile.txt
         self.window_size    = window_size   #window size,default 1152 bytes
         # Load file
         self.file           = open(self.filename)   #open the file to be sent.
@@ -89,10 +89,8 @@ class Sender(object):
                         socket.IPPROTO_UDP)
         self.udt_sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.filesize = os.stat(filename).st_size
-        #
         self.acksocket_initial = False
         self.numpackets = int(self.filesize/self.MSS)+(self.filesize%self.MSS>0)
-        #sender stats:-
         self.udt_send()
     
     def udt_send(self):
@@ -110,15 +108,18 @@ class Sender(object):
         EstimatedRTT = 2
         numpackets = 0
         stats = Stats()
+        log = Common.log(self.remote_port,self.ack_port_num)
         while (self.NextSeqNum<self.filesize):
             numpackets+=1
             if numpackets ==self.numpackets:
                 self.fin = 1
+                log.fin = 1
             TimeoutInterval = RTT()
             TimeoutInterval = TimeoutInterval.update(EstimatedRTT)
             pkt, length = self.make_pkt()
             self.send_data(pkt)
             send_time = time.time()
+            log.sequence(self.NextSeqNum)#update the current sequence number
             self.NextSeqNum += length
             stats.updateTotalBytesSent(int(length))
             stats.updateSegmentsSent()
@@ -130,6 +131,8 @@ class Sender(object):
                 if r:
                     data = clientsocket.recv(1024)
                     print data
+                    log.ack(data)
+                    log.write(self.log_filename)
                     EstimatedRTT = time.time()-send_time
                     break
                 if not r:
@@ -139,6 +142,7 @@ class Sender(object):
                     stats.updateSegmentsSent()
                     stats.updateSegmentsRestransmitted()
         stats.printStats()
+        self.log_filename.close()
     def make_pkt(self):
         """
         Makes the packet
@@ -175,17 +179,32 @@ class Sender(object):
 
 
 class Stats():
+    """
+    Generic class to manage the statistics.
+    """
     def __init__(self):
         self.TotalBytesSent = 0
         self.SegmentsSent = 0
         self.SegmentsRetransmitted = 0
     def updateTotalBytesSent(self,length):
+        """
+        Update Total Bytes Sent
+        """
         self.TotalBytesSent+=length
     def updateSegmentsSent(self):
+        """
+        Updates the number of segments sent
+        """
         self.SegmentsSent+=1
     def updateSegmentsRestransmitted(self):
+        """
+        Updates the number of segments retransmitted
+        """
         self.SegmentsRetransmitted+=1
     def printStats(self):
+        """
+        prints the stats, should be called after transmission is complete
+        """
         print "Delivery completed successfully"
         print "Total bytes sent = %s" %self.TotalBytesSent
         print "Segments sent = %s" %self.SegmentsSent
