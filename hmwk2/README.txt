@@ -75,7 +75,7 @@ _______________________________________________________________________________
 INSTALLATION:
 ###############################################################################
 The make file has some of the interesting options which help a lot
-while testing. Just unzip the file and it should be good to go!!
+while testing. Look into some of the Makefile Options
 _______________________________________________________________________________
 
 OPTIONS:
@@ -93,5 +93,15 @@ USAGE:
 ###############################################################################
 make receiver host the reciever on port 20000 and localhost.
 make sender host the sender on port 20001 and localhost.
+_______________________________________________________________________________
+
+Known Limitations:
+###############################################################################
+Sometimes when the first checksum fails when it is sent throught linkemulator
+it gets stuck and does not move forward. It's weird because when I try to delay
+the ack deliberately from reciever side(without linkemulator) it works properly.
+I am unable to debug this issue partly due to time constraints and due to 
+unfamiliarity with newudpl code base. Well as of now I can only ask that you 
+restart the reciever and sender again till the first packet passes the checksum.
 _______________________________________________________________________________
 Last updated: 11/9/2015
