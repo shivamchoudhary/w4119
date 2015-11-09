@@ -20,7 +20,7 @@ class Receiver(object):
         """
         Initializing the Receiver state.
         """
-        self.filename = filename                #Receiver outfile.
+        self.filename = open(filename,'w')      #Receiver outfile.
         self.listening_port = listening_port    #Recieverport number.
         self.sender_IP = sender_IP              #Send ACKs to sender.
         self.sender_port = sender_port          #ACK port number 20001.
@@ -54,6 +54,7 @@ class Receiver(object):
             else:
                 if self.expected_seqnum == seq:
                     print time.time(), self.sender_IP, seq, ack, flags
+                    self.filename.write(msg)
                     self.expected_seqnum +=len(msg)
                     try:
                         if not opened:
@@ -63,6 +64,7 @@ class Receiver(object):
                         acksocket.sendall(str(seq))
                         if flags ==1:
                             print "Last packet"
+                            self.filename.close()
                             sys.exit()
                     # acksocket.close()
                     except Exception as error:
