@@ -79,7 +79,7 @@ class Sender(object):
         # Load file
         self.file           = open(self.filename)   #open the file to be sent.
         # Packet level
-        self.MSS            = 2           #set maximum segment size to 576
+        self.MSS            = 576           #set maximum segment size to 576
         self.N              = self.MSS*self.window_size #set N to MSS*window
         self.InitialSeqNum  = 0
         self.NextSeqNum     = 1
