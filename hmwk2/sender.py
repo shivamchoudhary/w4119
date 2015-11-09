@@ -78,7 +78,7 @@ class Sender(object):
         # Load file
         self.file           = open(self.filename)   #open the file to be sent.
         # Packet level
-        self.MSS            = 10           #set maximum segment size to 576
+        self.MSS            = 2           #set maximum segment size to 576
         self.N              = self.MSS*self.window_size #set N to MSS*window
         self.InitialSeqNum  = 0
         self.NextSeqNum     = 1
@@ -92,6 +92,7 @@ class Sender(object):
         #
         self.acksocket_initial = False
         self.numpackets = int(self.filesize/self.MSS)+(self.filesize%self.MSS>0)
+        #sender stats:-
         self.udt_send()
     
     def udt_send(self):
@@ -108,6 +109,7 @@ class Sender(object):
         self.acksocket.listen(6)
         EstimatedRTT = 2
         numpackets = 0
+        stats = Stats()
         while (self.NextSeqNum<self.filesize):
             numpackets+=1
             if numpackets ==self.numpackets:
@@ -118,6 +120,8 @@ class Sender(object):
             self.send_data(pkt)
             send_time = time.time()
             self.NextSeqNum += length
+            stats.updateTotalBytesSent(int(length))
+            stats.updateSegmentsSent()
             if not connected:
                 clientsocket,clientaddress = self.acksocket.accept()
                 connected = True
@@ -131,6 +135,10 @@ class Sender(object):
                 if not r:
                     print "Timeout"
                     self.send_data(pkt)
+                    stats.updateTotalBytesSent(int(length))
+                    stats.updateSegmentsSent()
+                    stats.updateSegmentsRestransmitted()
+        stats.printStats()
     def make_pkt(self):
         """
         Makes the packet
@@ -164,6 +172,24 @@ class Sender(object):
                 print data
             # clientsocket.close()
             break
+
+
+class Stats():
+    def __init__(self):
+        self.TotalBytesSent = 0
+        self.SegmentsSent = 0
+        self.SegmentsRetransmitted = 0
+    def updateTotalBytesSent(self,length):
+        self.TotalBytesSent+=length
+    def updateSegmentsSent(self):
+        self.SegmentsSent+=1
+    def updateSegmentsRestransmitted(self):
+        self.SegmentsRetransmitted+=1
+    def printStats(self):
+        print "Delivery completed successfully"
+        print "Total bytes sent = %s" %self.TotalBytesSent
+        print "Segments sent = %s" %self.SegmentsSent
+        print "Segments retransmitted = %s" %self.SegmentsRetransmitted
 
 class RTT():
     """

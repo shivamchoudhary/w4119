@@ -60,13 +60,11 @@ class Receiver(object):
                         if not opened:
                             acksocket.connect(address)
                             opened = True
-                        time.sleep(3)
+                        # time.sleep(3)
                         acksocket.sendall(str(seq))
                         if flags ==1:
-                            print "Last packet"
                             self.filename.close()
                             sys.exit()
-                    # acksocket.close()
                     except Exception as error:
                         print "Caught: %s",error
 
