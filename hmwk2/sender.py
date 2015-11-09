@@ -60,7 +60,6 @@ event:FIN BIT set:
     make receiver
     make sender      
 """
-timer_status = False
 class Sender(object):
     def __init__(self, filename, remote_IP, remote_port, ack_port_num,
             log_filename, window_size):
