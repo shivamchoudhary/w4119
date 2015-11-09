@@ -44,7 +44,7 @@ ______________________________________________________________________________`
 Receiver Side FSM:-
 ##############################################################################
 Initialize:
-    ExpectedSeqNumber = 0
+    ExpectedSeqNumber = 1
 event:recv_data and finnotset
     if x==ExpectedSeqNumber:
         write_to_file
@@ -175,7 +175,6 @@ class Sender(object):
             data = clientsocket.recv(1024)
             if data:
                 print data
-            # clientsocket.close()
             break
 
 
@@ -232,67 +231,6 @@ class RTT():
         self.TimeoutInterval = EstimatedRTT +4*self.DevRTT
         return self.TimeoutInterval,EstimatedRTT
 
-class StoppableThread(threading.Thread):
-    def __init__(self):
-        super(StoppableThread, self).__init__()
-        self._stop = threading.Event()
-    def run(self):
-        s = socket.socket()
-        s.bind(('127.0.0.1', 20001))
-        s.listen(1)
-        print("Listening on {}:{}".format(s.getsockname()[0], s.getsockname()[1]))
-        while True:
-            try:
-                conn, addr = s.accept()
-            except socket.error:
-                # Check for stop signal
-                if self._stop.is_set():
-                    print("Shutting down cleanly...")
-                    s.close()
-                    return
-
-class recvAcks(threading.Thread):
-    def __init__(self):
-        super (recvAcks,self).__init__()
-        self._start = threading.Event()
-        self._stop = threading.Event()
-    
-    def run(self):
-        server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        server.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        server.bind(('localhost', 20001))
-        server.listen(5)
-        if self._start.isSet():
-            print "Listening for ACKS",time.time()
-            client,addr  = server.accept()
-            while True:
-                # client,addr = server.accept()
-                try:
-                    data = client.recv(1024)
-                    if data:
-                        print data
-                except socket.error:
-                    if self._stop.isSet():
-                        print "Graceful Shutdown"
-                        s.close()
-                        return
-
-class Timer(threading.Thread):
-    """
-    Subclassing Thread and setting a property as event
-    Inspired from 
-    https://mikeanthonywild.com/stopping-blocking-threads-in-python-using-
-    gevent-sort-of.html
-    """
-    def __init__(self):
-        super(Timer, self).__init__()
-        self._start = threading.Event()
-    def run(self):
-        if self._start.is_set():
-            time.sleep(1)
-        else:
-            return
-
 def main():
     try:
         filename        = str(sys.argv[1])
@@ -301,10 +239,6 @@ def main():
         ack_port_num    = int(sys.argv[4])
         log_filename    = str(sys.argv[5])
         window_size     = int(sys.argv[6])
-        # t1 = recvAcks()
-        # t1._start.set()
-        # t1.deamon = True
-        # t1.start()
         Sender(filename, remote_IP, remote_port, ack_port_num, log_filename, 
                 window_size)
 
