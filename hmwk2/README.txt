@@ -10,7 +10,6 @@ Initialize:
     InitialSeqNum = 0
     NextSeqNum = 1
     SendBase = InitialSeqNum
-##############################################################################
 event:udt_send
     if NextSeqNum <SendBase +N:
         pkt = make_pkt(data)
