@@ -127,6 +127,14 @@ _______________________________________________________________________________
 *USAGE:
 1)make receiver host the reciever on port 20000 and localhost logs on stdout.
 2)make sender host the sender on port 20001 and localhost logs on stdout.
+
+#If the checksum fails the reciever just writes "Checksum Failed!" on the 
+console and does not send ack back to the sender in this case!
+Since only FIN bit was to be implemented the logging module displays only FIN 
+flag status!
+#As per https://piazza.com/class/ie5l0ldfg5c6y6?cid=187,I have implemented 
+the port numbers of the source and destination and not the full IP address.
+
 _______________________________________________________________________________
 
 *Known Limitations:
