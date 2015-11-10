@@ -25,7 +25,11 @@ class Receiver(object):
         self.sender_IP = sender_IP              #Send ACKs to sender.
         self.sender_port = sender_port          #ACK port number 20001.
         if log_filename_receiver!="stdout":
-            self.log_filename_receiver = open(log_filename_receiver,'w+') # the log_file
+            try:
+                self.log_filename_receiver = open(log_filename_receiver,'w+') # the log_file
+            except Exception:
+                print "unable to create file"
+                sys.exit()
             self.logging_method = True
         else:
             self.log_filename_receiver = None
@@ -41,7 +45,7 @@ class Receiver(object):
         recvsocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         recvsocket.bind(('localhost', self.listening_port))
         acksocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        address = ('localhost',self.sender_port)
+        address = (self.sender_IP,self.sender_port)
         opened = False
         log = Common.log(self.sender_port,self.listening_port,self.logging_method)
         while True:
