@@ -7,6 +7,30 @@ Architecture:-
           sender-----receiver
        (127.0.0.1) (127.0.0.1)
        
+*Sample Output:-
+
+#Sender File:-
+1447128594.24 Source 20000 Destination 20001 Sequence 1 ACK 1 Fin 0 EST_RTT 2.0
+1447128594.24 Source 20000 Destination 20001 Sequence 3 ACK 3 Fin 0 EST_RTT 0.250255554914
+1447128594.24 Source 20000 Destination 20001 Sequence 5 ACK 5 Fin 0 EST_RTT 0.25006467104
+1447128594.24 Source 20000 Destination 20001 Sequence 7 ACK 7 Fin 0 EST_RTT 0.250058621168
+1447128594.24 Source 20000 Destination 20001 Sequence 9 ACK 9 Fin 0 EST_RTT 0.250056117773
+1447128594.24 Source 20000 Destination 20001 Sequence 11 ACK 11 Fin 0 EST_RTT 0.250054240227
+1447128594.24 Source 20000 Destination 20001 Sequence 13 ACK 13 Fin 0 EST_RTT 0.250070095062
+1447128594.24 Source 20000 Destination 20001 Sequence 15 ACK 15 Fin 0 EST_RTT 0.250053405762
+1447128594.24 Source 20000 Destination 20001 Sequence 17 ACK 17 Fin 1 EST_RTT 0.250053405762
+
+#Receiver File:-
+1447128594.24 Source 20001 Destination 20000 Sequence 1 ACK 1 Fin 0
+1447128594.24 Source 20001 Destination 20000 Sequence 3 ACK 3 Fin 0
+1447128594.24 Source 20001 Destination 20000 Sequence 5 ACK 5 Fin 0
+1447128594.24 Source 20001 Destination 20000 Sequence 7 ACK 7 Fin 0
+1447128594.24 Source 20001 Destination 20000 Sequence 9 ACK 9 Fin 0
+1447128594.24 Source 20001 Destination 20000 Sequence 11 ACK 11 Fin 0
+1447128594.24 Source 20001 Destination 20000 Sequence 13 ACK 13 Fin 0
+1447128594.24 Source 20001 Destination 20000 Sequence 15 ACK 15 Fin 0
+1447128594.24 Source 20001 Destination 20000 Sequence 17 ACK 17 Fin 1
+
 *DESCRIPTION:
 
 1)TCP Segment structure:- According to RFC 793
