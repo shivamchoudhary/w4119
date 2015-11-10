@@ -37,9 +37,8 @@ event:udt_send
     if NextSeqNum <SendBase +N:
         pkt = make_pkt(data)
         send_data(pkt)
-        if (timer not running):
-            start_timer
         NextSeqNum +=len(data)
+        wait_for_ack()
 event:timeout:
     retransmit from send_base
     start_timer
@@ -48,7 +47,6 @@ event: ACK recieved:
         SendBase=y
         if no currently unack seg:
             start timer
-
 
 3)Receiver Side FSM:-
 Initialize:
@@ -84,6 +82,31 @@ _______________________________________________________________________________
 *OPTIONS:
 
 1)Makefile Options:
+Here are the parameters which can be configured in Makefile
+#Common Parameters
+input_filename := input.txt #for sender
+output_filename := output.txt #for reciever
+
+#Reciever Parameters
+listening_port :=20000
+sender_IP :=127.0.0.1
+sender_port :=20001
+#log_filename_receiver :=recv_logfile.txt
+log_filename_receiver :=stdout
+
+#Sender Parameters
+remote_IP :=127.0.0.1
+remote_port :=20000
+ack_port_num :=20001
+#log_filename_sender :=send_logfile.txt
+log_filename_sender :=stdout
+
+window_size :=1152
+
+#Testing with link emulator
+lnkemu_port :=41192
+
+**Directives:-
 *make lnkemu:- This will start the linkemulator with default BIT error rate 
 of 1000.
 *make testsender:- Combine this when you are running with the linkemulator,it 
