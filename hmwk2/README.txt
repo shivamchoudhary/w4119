@@ -145,6 +145,11 @@ tested the sender with around 3MB files (around 5000+ Segments).
 #Please exit with Control-C.
 _______________________________________________________________________________
 
+Extra Features:
+
+* The makefile has lots of options which makes it very easy to test under some 
+default settings.
+_______________________________________________________________________________
 *Known Limitations:
 1)Sometimes when the first checksum fails when it is sent throught linkemulator
 it gets stuck and does not move forward. It's weird because when I try to delay
