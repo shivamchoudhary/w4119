@@ -19,6 +19,10 @@ Architecture:-
 1447128594.24 Source 20000 Destination 20001 Sequence 13 ACK 13 Fin 0 EST_RTT 0.250070095062
 1447128594.24 Source 20000 Destination 20001 Sequence 15 ACK 15 Fin 0 EST_RTT 0.250053405762
 1447128594.24 Source 20000 Destination 20001 Sequence 17 ACK 17 Fin 1 EST_RTT 0.250053405762
+Delivery completed successfully
+Total bytes sent = 18
+Segments sent = 9
+Segments retransmitted = 0
 
 #Receiver File:-
 1447128594.24 Source 20001 Destination 20000 Sequence 1 ACK 1 Fin 0
@@ -30,6 +34,7 @@ Architecture:-
 1447128594.24 Source 20001 Destination 20000 Sequence 13 ACK 13 Fin 0
 1447128594.24 Source 20001 Destination 20000 Sequence 15 ACK 15 Fin 0
 1447128594.24 Source 20001 Destination 20000 Sequence 17 ACK 17 Fin 1
+Delivery completed successfully
 _______________________________________________________________________________
 
 *DESCRIPTION:
