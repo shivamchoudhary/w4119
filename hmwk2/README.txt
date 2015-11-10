@@ -96,17 +96,17 @@ output_filename := output.txt #for reciever
 listening_port :=20000
 sender_IP :=127.0.0.1
 sender_port :=20001
-#log_filename_receiver :=recv_logfile.txt
-log_filename_receiver :=stdout
+#log_filename_receiver :=recv_logfile.txt #the logfile for receiver.
+log_filename_receiver :=stdout #Logging on Console
 
 #Sender Parameters
 remote_IP :=127.0.0.1
 remote_port :=20000
 ack_port_num :=20001
-#log_filename_sender :=send_logfile.txt
-log_filename_sender :=stdout
+#log_filename_sender :=send_logfile.txt #the logfile for sender
+log_filename_sender :=stdout #Logging on console
 
-window_size :=1152
+window_size :=1152 #If None is specified it defaults to 1.
 
 #Testing with link emulator
 lnkemu_port :=41192
@@ -120,6 +120,8 @@ will pass the arguments to the link emulator port. By default logging on stdout.
 specified,by default logging on stdout.
 *make receiver: This is the only option for receiver with some defaults 
 specified,by default logging on stdout.
+*make clean: Cleans all the *.pyc with output.txt(default) and sender and 
+receiver logfiles.
 _______________________________________________________________________________
 
 *USAGE:
