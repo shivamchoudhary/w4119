@@ -137,6 +137,7 @@ restart the reciever and sender again till the first packet passes the checksum.
 
 2)Referring https://piazza.com/class/ie5l0ldfg5c6y6?cid=175. I have seen the 
 proxy to crash when it is overwhelmed with packets. This is not reproducible 
-consistenly if the packets are sent one by one. 
+consistenly if the packets are sent one by one.If floating point error happens
+in the proxy please restart the proxy and test again!
 _______________________________________________________________________________
 Last updated: 11/9/2015
