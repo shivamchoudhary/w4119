@@ -6,15 +6,15 @@ output_filename := output.txt #for reciever
 listening_port :=20000
 sender_IP :=127.0.0.1
 sender_port :=20001
-#log_filename_receiver :=recv_logfile.txt
-log_filename_receiver :=stdout
+log_filename_receiver :=recv_logfile.txt
+#log_filename_receiver :=stdout
 
 #Sender Parameters
 remote_IP :=127.0.0.1
 remote_port :=20000
 ack_port_num :=20001
-#log_filename_sender :=send_logfile.txt
-log_filename_sender :=stdout
+log_filename_sender :=send_logfile.txt
+#log_filename_sender :=stdout
 
 window_size :=1152
 
