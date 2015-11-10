@@ -72,6 +72,11 @@ The reciever if receives a packet which has different seqnumber from what it
 expects it just drops it else it writes into the file.
 _______________________________________________________________________________
 
+5) Assumptions:-
+Sample RTT = 2
+MSS = 576 bytes
+Initial Timeout  = 1(Though it gets updated in the first round itself)
+_______________________________________________________________________________
 *INSTALLATION:
 
 The make file has some of the interesting options which help a lot
