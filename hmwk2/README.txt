@@ -83,7 +83,6 @@ _______________________________________________________________________________
 The make file has some of the interesting options which help a lot
 while testing. Look into some of the Makefile Options
 _______________________________________________________________________________
-
 *OPTIONS:
 
 1)Makefile Options:
@@ -127,13 +126,17 @@ _______________________________________________________________________________
 *USAGE:
 1)make receiver host the reciever on port 20000 and localhost logs on stdout.
 2)make sender host the sender on port 20001 and localhost logs on stdout.
+_______________________________________________________________________________
 
+*Implementation Caveats:
 #If the checksum fails the reciever just writes "Checksum Failed!" on the 
 console and does not send ack back to the sender in this case!
 Since only FIN bit was to be implemented the logging module displays only FIN 
 flag status!
 #As per https://piazza.com/class/ie5l0ldfg5c6y6?cid=187,I have implemented 
 the port numbers of the source and destination and not the full IP address.
+#The receiver sends back the ack of the packet it has correctly recieved.I have
+tested the sender with around 3MB files (around 5000+ Segments).
 
 _______________________________________________________________________________
 
