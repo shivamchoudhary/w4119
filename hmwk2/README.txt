@@ -140,7 +140,8 @@ flag status!
 the port numbers of the source and destination and not the full IP address.
 #The receiver sends back the ack of the packet it has correctly recieved.I have
 tested the sender with around 3MB files (around 5000+ Segments).
-
+#After completion it prints the statistics on the sender side.
+#Please exit with Control-C.
 _______________________________________________________________________________
 
 *Known Limitations:
