@@ -5,7 +5,7 @@ NAME Simple TCP-like transport-layer protocol!!
 *DESCRIPTION:
 
 1)TCP Segment structure:- According to RFC 793
-##############################################################################
+
 0                   1                   2                   3   
     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -28,7 +28,6 @@ NAME Simple TCP-like transport-layer protocol!!
 _______________________________________________________________________________
 
 2)Sender Side FSM:-
-##############################################################################
 Initialize:
     N = window_size * MSS
     InitialSeqNum = 0
@@ -52,7 +51,6 @@ event: ACK recieved:
 _______________________________________________________________________________
 
 3)Receiver Side FSM:-
-##############################################################################
 Initialize:
     ExpectedSeqNumber = 1
 event:recv_data and finnotset
@@ -85,7 +83,6 @@ _______________________________________________________________________________
 
 *OPTIONS:
 
-###############################################################################
 1)Makefile Options:
 *make lnkemu:- This will start the linkemulator with default BIT error rate 
 of 1000.
@@ -98,13 +95,11 @@ specified,by default logging on stdout.
 _______________________________________________________________________________
 
 *USAGE:
-###############################################################################
 1)make receiver host the reciever on port 20000 and localhost logs on stdout.
 2)make sender host the sender on port 20001 and localhost logs on stdout.
 _______________________________________________________________________________
 
 *Known Limitations:
-###############################################################################
 1)Sometimes when the first checksum fails when it is sent throught linkemulator
 it gets stuck and does not move forward. It's weird because when I try to delay
 the ack deliberately from reciever side(without linkemulator) it works properly.
