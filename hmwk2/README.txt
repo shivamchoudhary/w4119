@@ -1,7 +1,12 @@
 TCP Protocol
 
 NAME Simple TCP-like transport-layer protocol!!
-        
+Architecture:-            
+           Proxy(port 41192)
+              /       \                
+          sender-----receiver
+       (127.0.0.1) (127.0.0.1)
+       
 *DESCRIPTION:
 
 1)TCP Segment structure:- According to RFC 793
