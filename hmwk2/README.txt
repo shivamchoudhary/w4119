@@ -25,7 +25,7 @@ NAME Simple TCP-like transport-layer protocol!!
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    |                             data                              |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-_______________________________________________________________________________
+
 
 2)Sender Side FSM:-
 Initialize:
@@ -48,7 +48,7 @@ event: ACK recieved:
         SendBase=y
         if no currently unack seg:
             start timer
-_______________________________________________________________________________
+
 
 3)Receiver Side FSM:-
 Initialize:
@@ -61,14 +61,14 @@ event:recv_data and finnotset
 event:FIN BIT set:
     write_to_file
     send_ack()
-_______________________________________________________________________________
+
 
 4) Loss Recovery Mechanism:-
 The sender after sending a packet updates its TIMEOUT variable and if it doesn't
 get the ACK back in that timeout it sends the packet again.
 The reciever if receives a packet which has different seqnumber from what it 
 expects it just drops it else it writes into the file.
-_______________________________________________________________________________
+
 
 5) Assumptions:-
 Sample RTT = 2
