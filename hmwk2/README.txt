@@ -129,6 +129,9 @@ _______________________________________________________________________________
 _______________________________________________________________________________
 
 *Implementation Caveats:
+#Default Window size =1 is implemented
+#Stdout logging is implemented
+#EST_RTT is implemented in case of sender logging.
 #If the checksum fails the reciever just writes "Checksum Failed!" on the 
 console and does not send ack back to the sender in this case!
 Since only FIN bit was to be implemented the logging module displays only FIN 
