@@ -98,7 +98,7 @@ _______________________________________________________________________________
 2)make sender host the sender on port 20001 and localhost logs on stdout.
 _______________________________________________________________________________
 
-Known Limitations:
+*Known Limitations:
 ###############################################################################
 1)Sometimes when the first checksum fails when it is sent throught linkemulator
 it gets stuck and does not move forward. It's weird because when I try to delay
