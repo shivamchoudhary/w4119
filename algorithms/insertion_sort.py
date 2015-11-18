@@ -2,12 +2,11 @@ def insertion_sort(Array):
     for i in range(1 ,len(Array)):
         j = i-1
         index = i
-        while j>=0:
-            if Array[index] <Array[j]:
-                small_element = Array[index]
-                big_element = Array[j]
-                Array[j]=small_element
-                Array[index]=big_element
+        while j>=0 and (Array[index] < Array[j]):
+            small_element = Array[index]
+            big_element = Array[j]
+            Array[j]=small_element
+            Array[index]=big_element
             j = j-1
             index = index-1
     print Array 
