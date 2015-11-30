@@ -49,7 +49,7 @@ def main():
             "of Neighbour")
     parser.add_argument("weight1",type=float,help="A real number indicating"
             " cost of link")
-    parser.add_argument("--optional",nargs='*',default = None,help="Other Arguments")
+    parser.add_argument("optional",nargs=argparse.REMAINDER,default = None,help="Other Arguments")
     args = parser.parse_args()
     print args
     if args.optional is not None:
