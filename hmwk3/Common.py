@@ -10,6 +10,13 @@ class Table(object):
     """
     
     def __init__(self):
+        """
+        Starts with an empty table dictionary
+        """
+        #TODO:
+        # change the table to some hashed key or some tuple entry to incorporate
+        # weight!!
+
         self.table = {}
     def add_neighbour(self, ip, port):
         """
@@ -18,4 +25,9 @@ class Table(object):
         param:port Remote port of the neighbour
         """
         self.table[ip] = port
-        
+    def show_neighbour(self):
+        """
+        Shows the current neighbours of the client.
+        return: table of neighbours.
+        """
+        return self.table
