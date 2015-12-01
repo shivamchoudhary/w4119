@@ -30,7 +30,7 @@ class bfClient(object):
                 for triplets in arg:
                     ip, port, weight = triplets
                     neighbourTable.add_neighbour((ip, port), weight)
-        print neighbourTable.show_neighbour()
+        print neighbourTable.show_neighbours()
     def converge(self):
         pass
 

@@ -21,11 +21,11 @@ class Table(object):
     def add_neighbour(self, (ip,port), weight):
         """
         A Neighbour is defined by <ip,port> tuple.
-        param:ip IP address of the neighbour
-        param:port Remote port of the neighbour
+        param:ip,port IP address,Port tuple of the neighbour
+        param:weight Weight of the link to the neighbour
         """
         self.table[(ip,port)] = float(weight)
-    def show_neighbour(self):
+    def show_neighbours(self):
         """
         Shows the current neighbours of the client.
         return: table of neighbours.
