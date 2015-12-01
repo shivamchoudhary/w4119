@@ -1,9 +1,5 @@
-import sys
 import argparse
-import os
 import Common
-import socket
-import select
 
 class bfClient(object):
     """
@@ -20,8 +16,6 @@ class bfClient(object):
         self.ip = '127.0.0.1' #Each client is binded on localhost
         self.localport = localport
         self.timeout = timeout
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind((self.ip, self.localport))
         neighbourTable = Common.Table()
         neighbourTable.add_neighbour((ipaddress1, port1), weight1)
         #If the optional arguments are specified/else we have already added them.
@@ -31,9 +25,10 @@ class bfClient(object):
                     ip, port, weight = triplets
                     neighbourTable.add_neighbour((ip, port), weight)
         print neighbourTable.show_neighbours()
-    def converge(self):
-        pass
-
+        self.wait_on_socket() 
+    def wait_on_socket(self):
+        t1 = Common.DeploySocket(self.ip, self.localport)
+        t1.start()
 
 def main():
     parser = argparse.ArgumentParser(description='Bellman-Ford Distributed'

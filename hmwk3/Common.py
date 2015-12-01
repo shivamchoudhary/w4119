@@ -1,4 +1,7 @@
 import time
+import threading
+import socket
+import sys
 class Commands(object):
     
     
@@ -31,3 +34,24 @@ class Table(object):
         return: table of neighbours.
         """
         return self.table
+
+class DeploySocket(threading.Thread):
+    def __init__(self, ip, port):
+        super(DeploySocket, self).__init__()
+        self.ip = ip
+        self.port = port
+        self._stop = threading.Event()
+    def run(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+        s.bind((self.port,self.ip))
+        while True:
+            try:
+                s.recvfrom(1024)
+                sys.stdout.write("%$")
+            except socket.error:
+                if self._stop.is_set():
+                    print "Shutting Down the Client"
+                    s.close()
+                    return
+
