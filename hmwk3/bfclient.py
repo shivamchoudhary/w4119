@@ -5,13 +5,11 @@ import Common
 import socket
 import select
 
-
 class bfClient(object):
     """
     Class to manage all the clients.
     """
-
-    def __init__(self,localport,timeout,ipaddress1,port1,weight1,*args):
+    def __init__(self, localport, timeout, ipaddress1, port1, weight1, *args):
         """
         param:localport Local port on which the client is hosted.
         param:timeout The timeout related with the client.
@@ -25,12 +23,13 @@ class bfClient(object):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind((self.ip, self.localport))
         neighbourTable = Common.Table()
-        neighbourTable.add_neighbour((ipaddress1, port1),weight1)
-        if args is not None:
+        neighbourTable.add_neighbour((ipaddress1, port1), weight1)
+        #If the optional arguments are specified/else we have already added them.
+        if args[0]:
             for arg in args:
-                print arg
-
-
+                for triplets in arg:
+                    ip, port, weight = triplets
+                    neighbourTable.add_neighbour((ip, port), weight)
         print neighbourTable.show_neighbour()
     def converge(self):
         pass
@@ -49,18 +48,11 @@ def main():
             "of Neighbour")
     parser.add_argument("weight1",type=float,help="A real number indicating"
             " cost of link")
-    parser.add_argument("optional",nargs=argparse.REMAINDER,default = None,help="Other Arguments")
+    parser.add_argument("optional",nargs=argparse.REMAINDER,default=argparse.SUPPRESS,help="Other Arguments")
     args = parser.parse_args()
-    print args
-    if args.optional is not None:
-        if len(args.optional)%3 !=0:
-            raise ValueError ("Check Optional Arguments")
-            sys.exit(2)
-        else:
-            args.optional = zip(*[args.optional[i::3] for i in range(3)])
-            print args.optional
+    args.optional = zip(*[args.optional[i::3] for i in range(3)])
     client = bfClient(args.localport, args.timeout, args.ipaddress1, 
-                args.port1, args.weight1,args.optional)
+            args.port1, args.weight1,args.optional)
         
 if __name__=="__main__":
     main()
