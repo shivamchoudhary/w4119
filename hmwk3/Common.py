@@ -36,7 +36,14 @@ class Table(object):
         return self.table
 
 class DeploySocket(threading.Thread):
+    """
+    Subclassing thread to make it a bit generic
+    """
     def __init__(self, ip, port):
+        """
+        param:ip The IP address on which it is to be binded
+        param:port Port number on which it is to be binded
+        """
         super(DeploySocket, self).__init__()
         self.ip = ip
         self.port = port
@@ -44,7 +51,7 @@ class DeploySocket(threading.Thread):
     def run(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        s.bind((self.port,self.ip))
+        s.bind((self.ip,self.port))
         while True:
             try:
                 s.recvfrom(1024)
@@ -54,4 +61,3 @@ class DeploySocket(threading.Thread):
                     print "Shutting Down the Client"
                     s.close()
                     return
-
