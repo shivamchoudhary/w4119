@@ -14,21 +14,21 @@ class Table(object):
         """
         Starts with an empty table dictionary
         """
-        self.table = {}
+        Table.table = {}
     def add_neighbour(self, (ip, port), (link, weight)):
         """
         A Neighbour is defined by <ip,port> tuple.
         param:ip,port IP address,Port tuple of the neighbour
         param:link IP address to reach,weight link and Weight to the neighbour
         """
-        self.table[(ip, port)] = (link, weight)
+        Table.table[(ip, port)] = (link, weight)
     @staticmethod
     def show_neighbours():
         """
         Shows the current neighbours of the client.
         return: table of neighbours.
         """
-        return self.table
+        return Table.table
 
 class DeploySocket(threading.Thread):
     """
