@@ -63,8 +63,9 @@ class Cli(cmd.Cmd):
                 "neighbour to the original value after it was destroyed by,"\
                 "LINKDOWN"
 
-    def do_SHOWRT(self,arg):
+    def do_SHOWRT(self, arg):
         print "SHOWRT"
+        print Common.Table.show_neighbours()
     def help_SHOWRT(self):
         print "Syntax: SHOWRT"
         print "This allows the user to view the current routuing table of",\

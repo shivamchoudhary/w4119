@@ -4,12 +4,7 @@ import socket
 import sys
 import select
 import cmd
-class Commands(object):
-    def __init__(self):
-        pass
-class Print(object):
-    def __init__(self):
-        pass
+import json
         
 class Table(object):
     """
@@ -19,26 +14,27 @@ class Table(object):
         """
         Starts with an empty table dictionary
         """
-        self.table = {}
+        Table.table = {}
     def add_neighbour(self, (ip, port), (link, weight)):
         """
         A Neighbour is defined by <ip,port> tuple.
         param:ip,port IP address,Port tuple of the neighbour
         param:link IP address to reach,weight link and Weight to the neighbour
         """
-        self.table[(ip, port)] = (link, weight)
-    def show_neighbours(self):
+        Table.table[(ip, port)] = (link, weight)
+    @staticmethod
+    def show_neighbours():
         """
         Shows the current neighbours of the client.
         return: table of neighbours.
         """
-        return self.table
+        return Table.table
 
 class DeploySocket(threading.Thread):
     """
-    Subclassing thread to make it a bit generic
+    Subclassing thread to make it a bit more generic
     """
-    def __init__(self,ip, port):
+    def __init__(self, ip, port):
         """
         param:ip The IP address on which it is to be binded
         param:port Port number on which it is to be binded
@@ -50,7 +46,7 @@ class DeploySocket(threading.Thread):
     def run(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        s.bind((self.ip,self.port))
+        s.bind((self.ip, self.port))
         while True:
             r,a,b  = select.select([s],[],[],5)
             if r:
@@ -62,5 +58,9 @@ class DeploySocket(threading.Thread):
                 print "Shutting Down the Client"
                 s.close()
                 return
+
+class Message(object):
+    def __init__(self):
+        pass
 
 
