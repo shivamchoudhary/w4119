@@ -1,13 +1,22 @@
 #BFCLIENT Parameters
-localport :=4115
-timeout :=3
+localport :=4115 #Port number that the process should listen to.
+timeout :=3 #Intertransmission time of ROUTE-UPDATE messages in steady state(seconds)
 
 #other clients:
-ipaddress1 :=127.0.0.1
-port1 :=4116
-weight :=5.0
+#@client 1
+ipaddress1 :=127.0.0.1 #IP address of the neighbour,given in dotted decimal.
+port1 :=4116 # The port number on which the neighbour is listening.
+weight1 :=5.0 #A real number indicating the cost of the link.
+#@client 2
+ipaddress2:=127.0.0.1
+port2:=4118
+weight2:=30.0
 
+
+#directives
 bfclient:
+	python bfclient.py $(localport) $(timeout) $(ipaddress1) $(port1) $(weight)
+bfclient2:
 	python bfclient.py $(localport) $(timeout) $(ipaddress1) $(port1) $(weight)
 clean:
 	rm *.pyc 
