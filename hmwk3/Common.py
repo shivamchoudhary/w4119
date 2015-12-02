@@ -2,9 +2,9 @@ import time
 import threading
 import socket
 import sys
+import select
+import cmd
 class Commands(object):
-    
-    
     def __init__(self):
         pass
 class Print(object):
@@ -24,7 +24,7 @@ class Table(object):
         """
         A Neighbour is defined by <ip,port> tuple.
         param:ip,port IP address,Port tuple of the neighbour
-        param:link,weight link and Weight to the neighbour
+        param:link IP address to reach,weight link and Weight to the neighbour
         """
         self.table[(ip, port)] = (link, weight)
     def show_neighbours(self):
@@ -38,7 +38,7 @@ class DeploySocket(threading.Thread):
     """
     Subclassing thread to make it a bit generic
     """
-    def __init__(self, ip, port):
+    def __init__(self,ip, port):
         """
         param:ip The IP address on which it is to be binded
         param:port Port number on which it is to be binded
@@ -52,11 +52,15 @@ class DeploySocket(threading.Thread):
         s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         s.bind((self.ip,self.port))
         while True:
-            try:
-                s.recvfrom(1024)
-                sys.stdout.write("%$")
-            except socket.error:
-                if self._stop.is_set():
-                    print "Shutting Down the Client"
-                    s.close()
-                    return
+            r,a,b  = select.select([s],[],[],5)
+            if r:
+                data = s.recvfrom(1024)
+            if not r:
+                print "Timeout"
+                return None
+            if self._stop.is_set():
+                print "Shutting Down the Client"
+                s.close()
+                return
+
+

@@ -1,10 +1,12 @@
 import argparse
 import Common
-
+import sys
+import cmd
 class bfClient(object):
     """
     Class to manage all the clients.
     """
+    
     def __init__(self, localport, timeout, ipaddress1, port1, weight1, *args):
         """
         param:localport Local port on which the client is hosted.
@@ -25,10 +27,50 @@ class bfClient(object):
                     ip, port, weight = triplets
                     neighbourTable.add_neighbour((ip, port), (ip,weight))
         print neighbourTable.show_neighbours()
-        self.wait_on_socket() 
+        self.wait_on_socket()
+        console =Cli()
+        console.cmdloop()
+    
     def wait_on_socket(self):
         t1 = Common.DeploySocket(self.ip, self.localport)
         t1.start()
+
+class Cli(cmd.Cmd):
+    def __init__(self):
+        cmd.Cmd.__init__(self)
+        self.prompt = "%>"
+        self.doc_header="Distributed Bellman Ford"
+    def do_LINKDOWN(self,ip_address,port):
+        pass
+    def help_LINKDOWN(self):
+        print "Syntax: LINKDOWN {ip_address port}"
+        print "This allows the user to destroy an existing link,i.e change",\
+                'the link cost to infinity to the mentioned neighbour.'
+    def do_LINKUP(self,ip_address,port):
+        pass
+    def help_LINKUP(self):
+        print "Syntax: LINKUP {ip_address}"
+        print "This allows the user to restore the link to the mentioned",\
+                "neighbour to the original value after it was destroyed by,"\
+                "LINKDOWN"
+
+    def do_SHOWRT(self,arg):
+        print "SHOWRT"
+    def help_SHOWRT(self):
+        print "Syntax: SHOWRT"
+        print "This allows the user to view the current routuing table of",\
+                " the client"
+    def do_CLOSE(self):
+        pass
+    def help_CLOSE(self):
+        print "Syntax: CLOSE"
+        print "With this command the client process should close/shutdown."
+    def default(self,line):
+        print "Command Not recognized"
+    def emptyline(self):
+        pass
+    def do_help(self,args):
+        cmd.Cmd.do_help(self,args)
 
 def main():
     parser = argparse.ArgumentParser(description='Bellman-Ford Distributed'
