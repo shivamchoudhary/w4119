@@ -26,7 +26,6 @@ class bfClient(object):
                 for triplets in arg:
                     ip, port, weight = triplets
                     neighbourTable.add_neighbour((ip, port), (ip,weight))
-        print neighbourTable.show_neighbours()
         self.wait_on_socket()
         console =Cli()
         console.cmdloop()
@@ -36,10 +35,20 @@ class bfClient(object):
         t1.start()
 
 class Cli(cmd.Cmd):
+    """
+    Subclassed cmd for console Management!!
+    """
     def __init__(self):
         cmd.Cmd.__init__(self)
         self.prompt = "%>"
         self.doc_header="Distributed Bellman Ford"
+        self.ruler="-"
+    def cmdloop(self):
+        try:
+            cmd.Cmd.cmdloop(self)
+        except TypeError:
+            print "Wrong Syntax use help <command> to find correct usage."
+            self.cmdloop()
     def do_LINKDOWN(self,ip_address,port):
         pass
     def help_LINKDOWN(self):
@@ -65,13 +74,15 @@ class Cli(cmd.Cmd):
     def help_CLOSE(self):
         print "Syntax: CLOSE"
         print "With this command the client process should close/shutdown."
-    def default(self,line):
+    def default(self, line):
         print "Command Not recognized"
     def emptyline(self):
         pass
-    def do_help(self,args):
-        cmd.Cmd.do_help(self,args)
-
+    def do_help(self, args):
+        cmd.Cmd.do_help(self, args)
+    def help_help(self):
+        print "Syntax: help"
+        print "Well it doesn't make sense to ask for help on help,Inception Maybe!!"
 def main():
     parser = argparse.ArgumentParser(description='Bellman-Ford Distributed'
             'Algorithm')
