@@ -17,13 +17,13 @@ class bfClient(object):
         self.localport = localport
         self.timeout = timeout
         neighbourTable = Common.Table()
-        neighbourTable.add_neighbour((ipaddress1, port1), weight1)
+        neighbourTable.add_neighbour((ipaddress1, port1), (ipaddress1,weight1))
         #If the optional arguments are specified/else we have already added them.
         if args[0]:
             for arg in args:
                 for triplets in arg:
                     ip, port, weight = triplets
-                    neighbourTable.add_neighbour((ip, port), weight)
+                    neighbourTable.add_neighbour((ip, port), (ip,weight))
         print neighbourTable.show_neighbours()
         self.wait_on_socket() 
     def wait_on_socket(self):

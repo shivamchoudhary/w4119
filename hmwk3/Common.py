@@ -15,19 +15,18 @@ class Table(object):
     """
     A Generic class to hold the router Neighbour information.
     """
-    
     def __init__(self):
         """
         Starts with an empty table dictionary
         """
         self.table = {}
-    def add_neighbour(self, (ip,port), weight):
+    def add_neighbour(self, (ip, port), (link, weight)):
         """
         A Neighbour is defined by <ip,port> tuple.
         param:ip,port IP address,Port tuple of the neighbour
-        param:weight Weight of the link to the neighbour
+        param:link,weight link and Weight to the neighbour
         """
-        self.table[(ip,port)] = float(weight)
+        self.table[(ip, port)] = (link, weight)
     def show_neighbours(self):
         """
         Shows the current neighbours of the client.
