@@ -2,6 +2,7 @@ import argparse
 import Common
 import sys
 import cmd
+import os
 class bfClient(object):
     """
     Class to manage all the clients.
@@ -46,8 +47,8 @@ class Cli(cmd.Cmd):
     def cmdloop(self):
         try:
             cmd.Cmd.cmdloop(self)
-        except TypeError:
-            print "Wrong Syntax use help <command> to find correct usage."
+        except TypeError as e:
+            print "Wrong Syntax use help <command> to find correct usage.",e
             self.cmdloop()
     def do_LINKDOWN(self,ip_address,port):
         pass
@@ -64,8 +65,12 @@ class Cli(cmd.Cmd):
                 "LINKDOWN"
 
     def do_SHOWRT(self, arg):
-        print "SHOWRT"
-        print Common.Table.show_neighbours()
+        neighbourTable = Common.Table.show_neighbours()
+        for k,v in neighbourTable.iteritems():
+            dst     = k[0]+":"+str(k[1])
+            cost    = v[1]
+            link    = v[0]
+            print "Destination = {}, Cost = {}, Link = ({})".format(dst, cost, link)            
     def help_SHOWRT(self):
         print "Syntax: SHOWRT"
         print "This allows the user to view the current routuing table of",\

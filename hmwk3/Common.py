@@ -5,7 +5,7 @@ import sys
 import select
 import cmd
 import json
-        
+import string        
 class Table(object):
     """
     A Generic class to hold the router Neighbour information.
@@ -21,7 +21,7 @@ class Table(object):
         param:ip,port IP address,Port tuple of the neighbour
         param:link IP address to reach,weight link and Weight to the neighbour
         """
-        Table.table[(ip, port)] = (link, weight)
+        Table.table[(ip, port)] = (link+":"+str(port), weight)
     @staticmethod
     def show_neighbours():
         """
@@ -47,7 +47,7 @@ class DeploySocket(threading.Thread):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         s.bind((self.ip, self.port))
-        while True:
+        while self._stop is not set:
             r,a,b  = select.select([s],[],[],5)
             if r:
                 data = s.recvfrom(1024)
@@ -62,5 +62,4 @@ class DeploySocket(threading.Thread):
 class Message(object):
     def __init__(self):
         pass
-
 
