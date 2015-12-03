@@ -2,7 +2,7 @@ import argparse
 import Common
 import sys
 import cmd
-import os
+import datetime
 class bfClient(object):
     """
     Class to manage all the clients.
@@ -66,6 +66,8 @@ class Cli(cmd.Cmd):
 
     def do_SHOWRT(self, arg):
         neighbourTable = Common.Table.show_neighbours()
+        print "{} Distance vector list is".format(
+                datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))
         for k,v in neighbourTable.iteritems():
             dst     = k[0]+":"+str(k[1])
             cost    = v[1]
