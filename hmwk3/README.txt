@@ -21,6 +21,6 @@ Start dv sending thread -- Thread 2    /
 -> semantics
 
 *Additional Implementations
-
+can accept input in mixed format like Showrt,showrt etc
 
 
