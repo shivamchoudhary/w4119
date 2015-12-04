@@ -1,0 +1,52 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+Cli	bfclient.py	/^class Cli(cmd.Cmd):$/;"	c
+Message	Common.py	/^class Message(object):$/;"	c
+RecieveSocket	Common.py	/^class RecieveSocket(threading.Thread):$/;"	c
+SendSocket	Common.py	/^class SendSocket(threading.Thread):$/;"	c
+Table	Common.py	/^class Table(object):$/;"	c
+__init__	Common.py	/^    def __init__(self):$/;"	m	class:RecieveSocket
+__init__	Common.py	/^    def __init__(self):$/;"	m	class:SendSocket
+__init__	Common.py	/^    def __init__(self):$/;"	m	class:Table
+__init__	Common.py	/^    def __init__(self,type,data=None):$/;"	m	class:Message
+__init__	bfclient.py	/^    def __init__(self):$/;"	m	class:Cli
+__init__	bfclient.py	/^    def __init__(self, localport, timeout, ipaddress1, port1, weight1, *args):$/;"	m	class:bfClient
+_link_DOWN	Common.py	/^    def _link_DOWN(self):$/;"	m	class:SendSocket
+_link_UP	Common.py	/^    def _link_UP(self):$/;"	m	class:SendSocket
+_route_UPDATE	Common.py	/^    def _route_UPDATE(self):$/;"	m	class:SendSocket
+add_neighbour	Common.py	/^    def add_neighbour(self, (ip, port), (link, weight)):$/;"	m	class:Table
+bfClient	bfclient.py	/^class bfClient(threading.Thread):$/;"	c
+cmdloop	bfclient.py	/^    def cmdloop(self):$/;"	m	class:Cli
+complete_default	bfclient.py	/^    def complete_default(self, text, line, begidx, endidx):$/;"	m	class:Cli
+default	bfclient.py	/^    def default(self, line):$/;"	m	class:Cli
+do_close	bfclient.py	/^    def do_close(self):$/;"	m	class:Cli
+do_help	bfclient.py	/^    def do_help(self, args):$/;"	m	class:Cli
+do_linkdown	bfclient.py	/^    def do_linkdown(self,ip_address,port):$/;"	m	class:Cli
+do_linkup	bfclient.py	/^    def do_linkup(self, ip_address, port):$/;"	m	class:Cli
+do_showrt	bfclient.py	/^    def do_showrt(self, arg):$/;"	m	class:Cli
+emptyline	bfclient.py	/^    def emptyline(self):$/;"	m	class:Cli
+help_close	bfclient.py	/^    def help_close(self):$/;"	m	class:Cli
+help_help	bfclient.py	/^    def help_help(self):$/;"	m	class:Cli
+help_linkdown	bfclient.py	/^    def help_linkdown(self):$/;"	m	class:Cli
+help_linkup	bfclient.py	/^    def help_linkup(self):$/;"	m	class:Cli
+help_showrt	bfclient.py	/^    def help_showrt(self):$/;"	m	class:Cli
+initLogger	Common.py	/^def initLogger(level):$/;"	f
+ipaddress1	Makefile	/^ipaddress1 :=127.0.0.1 #IP address of the neighbour,given in dotted decimal.$/;"	m
+ipaddress2	Makefile	/^ipaddress2:=127.0.0.1$/;"	m
+localport	Makefile	/^localport :=4115 #Port number that the process should listen to.$/;"	m
+main	bfclient.py	/^def main():$/;"	f
+port1	Makefile	/^port1 :=4116 # The port number on which the neighbour is listening.$/;"	m
+port2	Makefile	/^port2:=4118$/;"	m
+precmd	bfclient.py	/^    def precmd(self,line):$/;"	m	class:Cli
+run	Common.py	/^    def run(self):$/;"	m	class:RecieveSocket
+run	Common.py	/^    def run(self):$/;"	m	class:SendSocket
+run	bfclient.py	/^    def run(self):$/;"	m	class:bfClient
+show_neighbours	Common.py	/^    def show_neighbours():$/;"	m	class:Table
+timeout	Makefile	/^timeout :=3 #Intertransmission time of ROUTE-UPDATE messages in steady state(seconds)$/;"	m
+update_table	Common.py	/^    def update_table(self):$/;"	m	class:Table
+weight1	Makefile	/^weight1 :=5.0 #A real number indicating the cost of the link.$/;"	m
+weight2	Makefile	/^weight2:=30.0$/;"	m

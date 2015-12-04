@@ -5,6 +5,8 @@ import datetime
 import threading
 import time
 import logging
+from threading import Lock
+
 class bfClient(threading.Thread):
     """
     Class to manage all the clients.

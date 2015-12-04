@@ -20,4 +20,4 @@ bfclient2:
 manyclient:
 	python bfclient.py 4115 3 128.59.196.2 4116 5.0 128.59.196.2 4118 30.0
 clean:
-	rm *.pyc 
+	rm *.pyc *.log 

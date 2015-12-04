@@ -5,11 +5,10 @@ Makefile:- The included makefile can provide direct command line interface to
 run the program directly. Run make bfclient to run the client with 1 neighbour
 bfclient
 *bfclient Architecture :
-Initialize Routing Table -- Sequential
-Start command line thread --  Thread 1 \
+Initialize Routing Table -- Thread 1
+Start recieving thread  -- Thread 2    \
                                         Use some kind of sync mechanism.
-Start dv sending thread -- Thread 2    / 
-
+Start dv sending thread -- Thread 3    / 
 
 
 *Program Features:-
@@ -21,6 +20,6 @@ Start dv sending thread -- Thread 2    /
 -> semantics
 
 *Additional Implementations
-can accept input in mixed format like Showrt,showrt etc
-
+1) Can accept input in mixed format like Showrt,showrt etc
+2) Can autocomplete the commands,provides rich help interface,seriously try it
 

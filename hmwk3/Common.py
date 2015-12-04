@@ -71,8 +71,7 @@ class RecieveSocket(threading.Thread):
         """
         Establish a listening port for the lifetime of the connection
         """
-        time.sleep(3)
-        print "RecieveSocket"
+        logging.debug("Initializing Reciever Socket")
         # s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         # s.bind((self.ip, self.port))
@@ -102,9 +101,7 @@ class SendSocket(threading.Thread):
         }
         self._dvchanged = threading.Event() #a flag to indicate dv has changed
     def run(self):
-        time.sleep(5)
-        logging.debug("socket")
-        print "SENDER SOCKET"
+        logging.debug("Initializing sender socket")
     def _route_UPDATE(self):
         pass
     def _link_UP(self):
