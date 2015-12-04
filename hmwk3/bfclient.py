@@ -6,6 +6,7 @@ import threading
 import time
 import logging
 from threading import Lock
+import Queue
 
 class bfClient(threading.Thread):
     """
@@ -31,6 +32,7 @@ class bfClient(threading.Thread):
             for arg in args:
                 for triplets in arg:
                     ip, port, weight = triplets
+                    logging.debug("Adding %s with %s",(ip,port),(ip,weight))
                     self.neighbourTable.add_neighbour((ip, port), (ip,weight))
         logging.info("Initialized Client Current table is %s", self.neighbourTable.table)
     def run(self):
@@ -42,7 +44,8 @@ class Cli(cmd.Cmd):
     """
     def __init__(self):
         cmd.Cmd.__init__(self)
-        self.SUPPORTED_COMMANDS = ['showrt','linkup','linkdown','close']
+        self.SUPPORTED_COMMANDS = ['showrt','linkup','linkdown','close','help',
+                'tip']
         self.prompt = "%>"
         self.doc_header="Distributed Bellman Ford"
         self.ruler="-"
@@ -56,6 +59,7 @@ class Cli(cmd.Cmd):
             print "Wrong Syntax use help <command> to find correct usage.",e
             self.cmdloop()
     def precmd(self,line):
+        logging.debug("Input:'%s'",line)
         line = line.lower()
         return cmd.Cmd.precmd(self, line)
     def do_linkdown(self,ip_address,port):
@@ -72,7 +76,6 @@ class Cli(cmd.Cmd):
         print "This allows the user to restore the link to the mentioned",\
                 "neighbour to the original value after it was destroyed by,"\
                 "LINKDOWN"
-
     def do_showrt(self, arg):
         neighbourTable = Common.Table.show_neighbours()
         print "{} Distance vector list is".format(
@@ -99,8 +102,13 @@ class Cli(cmd.Cmd):
     def help_close(self):
         print "Syntax: CLOSE"
         print "With this command the client process should close/shutdown."
+    def do_tip(self,line):
+        print "1) You can type help <command_name> to get syntax and help."
+        print "2) You can type in any case."
+        print "3) You can use tab completions try it seriously its awesome"
+    
     def default(self, line):
-        print "Command Not recognized"
+        print "Command Not recognized,try help or press <tab>"
     def emptyline(self):
         pass
     def do_help(self, args):
@@ -127,12 +135,15 @@ def main():
             default=argparse.SUPPRESS, help="Other Arguments")
     args = parser.parse_args()
     args.optional = zip(*[args.optional[i::3] for i in range(3)])
+    #initialize all the queues here!!
+    reciever_q = Queue.Queue()
+    #initialize all the threads down here !!
     client = bfClient(args.localport, args.timeout, args.ipaddress1, 
     args.port1, args.weight1,args.optional)
     client.start()
-    sendsocket = Common.SendSocket()
+    sendsocket = Common.SendSocket(reciever_q)
     sendsocket.start()
-    recieversocket = Common.RecieveSocket()
+    recieversocket = Common.RecieveSocket(args.localport,reciever_q)
     recieversocket.start()
     #TODO
     # Add Support to capture ctrl-c events in thread

@@ -5,14 +5,13 @@ import cmd
 import json
 import time
 import logging
-
+import Queue
 def initLogger(level):
-    #TODO : Add file config
     logging.basicConfig(
         format='Thread=[ %(threadName)s ]-level = [ %(levelname)s ]-'
         'Module=[ %(module)s ]-linenum=[ %(lineno)d ]- '
         'Function = [ %(funcName)s]-msg=[ %(message)s ]',
-        level=level)
+        level=level,filename="client.log",filemode="w")
 
     
 class Table(object):
@@ -58,41 +57,46 @@ class RecieveSocket(threading.Thread):
     """
     Subclassing thread to make it a bit more generic
     """
-    def __init__(self):
+    def __init__(self,port,reciever_q):
         """
+        The reciever does not require ip because its on localhost
         param:ip The IP address on which it is to be binded
         param:port Port number on which it is to be binded
         """
         super(RecieveSocket, self).__init__()
-        # self.ip = ip
-        # self.port = port
+        self.ip = '127.0.0.1'
+        self.port = port
         self._stop = threading.Event()
+        self.reciever_q = reciever_q
     def run(self):
         """
         Establish a listening port for the lifetime of the connection
         """
         logging.debug("Initializing Reciever Socket")
-        # s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        # s.bind((self.ip, self.port))
-        # while True:
-            # r,a,b  = select.select([s],[],[],1)
-            # if r:
-                # data = s.recvfrom(1024)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+        s.bind((self.ip, self.port))
+        logging.debug("Reciever binding on (%s,%s) complete",self.ip,self.port)
+        while True:
+            r,a,b  = select.select([s],[],[])
+            if r:
+                data = s.recvfrom(1024)
+                self.reciever_q.put(data)
+                logging.debug("Recieved '%s' from %s",data[0],data[1])
             # if not r:
-                # print "Timeout"
+                # pass
                 # return None
-            # if self._stop.is_set():
-                # print "Shutting Down the Client"
-                # s.close()
-                # return
+            if self._stop.is_set():
+                print "Shutting Down the Client"
+                s.close()
+                return
 
 class SendSocket(threading.Thread):
     """ 
     The socket for sending the data between neighbours.It uses the Message
     class to dispatch appropriate functions. 
     """
-    def __init__(self):
+    def __init__(self,sender_q):
         super (SendSocket,self).__init__()
         self.handlers = {
                 Message.ROUTE_UPDATE:self._route_UPDATE,
@@ -100,8 +104,14 @@ class SendSocket(threading.Thread):
                 Message.LINK_DOWN:self._link_DOWN
         }
         self._dvchanged = threading.Event() #a flag to indicate dv has changed
+        self.sender_q = sender_q
     def run(self):
         logging.debug("Initializing sender socket")
+        while True:
+            try:
+                logging.debug("data %s from queue",self.sender_q.get(True,0.1))
+            except Queue.Empty as e:
+                continue
     def _route_UPDATE(self):
         pass
     def _link_UP(self):

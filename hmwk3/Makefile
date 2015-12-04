@@ -19,5 +19,9 @@ bfclient2:
 	python bfclient.py $(port1) $(timeout) 127.0.0.1 $(localport) $(weight1)
 manyclient:
 	python bfclient.py 4115 3 128.59.196.2 4116 5.0 128.59.196.2 4118 30.0
+test:
+	$(clean)
+	gnome-terminal --window --maximize -e "tail -f client.log"
+	python bfclient.py $(localport) $(timeout) $(ipaddress1) $(port1) $(weight1)
 clean:
 	rm *.pyc *.log 
