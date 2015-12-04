@@ -4,6 +4,17 @@ import select
 import cmd
 import json
 import time
+import logging
+
+def initLogger(level):
+    #TODO : Add file config
+    logging.basicConfig(
+        format='Thread=[ %(threadName)s ]-level = [ %(levelname)s ]-'
+        'Module=[ %(module)s ]-linenum=[ %(lineno)d ]- '
+        'Function = [ %(funcName)s]-msg=[ %(message)s ]',
+        level=level)
+
+    
 class Table(object):
     """
     A Generic class to hold the router Neighbour information.
@@ -42,7 +53,6 @@ class Table(object):
         else:
             Table._dvchanged = False
         Table.table = Table.updated_table
-
 
 class RecieveSocket(threading.Thread):
     """
@@ -93,6 +103,7 @@ class SendSocket(threading.Thread):
         self._dvchanged = threading.Event() #a flag to indicate dv has changed
     def run(self):
         time.sleep(5)
+        logging.debug("socket")
         print "SENDER SOCKET"
     def _route_UPDATE(self):
         pass

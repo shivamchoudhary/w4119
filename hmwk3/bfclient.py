@@ -4,7 +4,7 @@ import cmd
 import datetime
 import threading
 import time
-
+import logging
 class bfClient(threading.Thread):
     """
     Class to manage all the clients.
@@ -30,6 +30,7 @@ class bfClient(threading.Thread):
                 for triplets in arg:
                     ip, port, weight = triplets
                     self.neighbourTable.add_neighbour((ip, port), (ip,weight))
+        logging.info("Initialized Client Current table is %s", self.neighbourTable.table)
     def run(self):
         console =Cli()
         console.cmdloop()
@@ -45,6 +46,7 @@ class Cli(cmd.Cmd):
         self.ruler="-"
         self.intro = 'Welcome to Bellman Ford Router Shell. Type help or ? to'\
                 ' list Commands. Bonus tip: You can enter them in *any* case'
+        logging.info("CLI Loop Initialized")
     def cmdloop(self):
         try:
             cmd.Cmd.cmdloop(self)
@@ -133,4 +135,5 @@ def main():
     #TODO
     # Add Support to capture ctrl-c events in thread
 if __name__=="__main__":
+    Common.initLogger(logging.DEBUG)
     main()
