@@ -6,13 +6,13 @@ import json
 import time
 import logging
 import Queue
+import datetime
 def initLogger(level):
     logging.basicConfig(
         format='Thread=[ %(threadName)s ]-level = [ %(levelname)s ]-'
         'Module=[ %(module)s ]-linenum=[ %(lineno)d ]- '
         'Function = [ %(funcName)s]-msg=[ %(message)s ]',
         level=level,filename="client.log",filemode="w")
-
     
 class Table(object):
     """
@@ -94,37 +94,49 @@ class RecieveSocket(threading.Thread):
 class SendSocket(threading.Thread):
     """ 
     The socket for sending the data between neighbours.It uses the Message
-    class to dispatch appropriate functions. 
+    class to dispatch appropriate functions.Waits till timeout seconds or if
+    dv has changed!
     """
-    def __init__(self,sender_q):
-        super (SendSocket,self).__init__()
+    #TODO
+    # Add a way to take neighbourTable and parse it
+    def __init__(self, sender_q,timeout):
+        super (SendSocket, self).__init__()
         self.handlers = {
                 Message.ROUTE_UPDATE:self._route_UPDATE,
                 Message.LINK_UP:self._link_UP,
                 Message.LINK_DOWN:self._link_DOWN
         }
-        self._dvchanged = threading.Event() #a flag to indicate dv has changed
+        self.timeout        = timeout
+        self._dvchanged     = threading.Event() #event dv has changed
+        self.stoprequest    = threading.Event()
         self.sender_q = sender_q
     def run(self):
         logging.debug("Initializing sender socket")
-        while True:
+        while not self._dvchanged.wait(timeout=self.timeout):
+            logging.debug('Self timeout triggered sending route updates')
             try:
                 logging.debug("data %s from queue",self.sender_q.get(True,0.1))
             except Queue.Empty as e:
                 continue
+            time.sleep(0.1)
     def _route_UPDATE(self):
         pass
     def _link_UP(self):
         pass
     def _link_DOWN(self):
         pass
+    # def join(self,timeout=5):
+        # print "Stopping brace"
+        # self.stoprequest.set()
+        # super(SendSocket, self).join(timeout)
 
 
 class Message(object):
-    """ Messages exchanged between the clients. Each has data type.
-        ROUTE_UPDATE    :
-        LINK_UP         :
-        LINK_DOWN       :
+    """ 
+    Messages exchanged between the clients. Each has data type.
+    ROUTE_UPDATE    :
+    LINK_UP         :
+    LINK_DOWN       :
     """
     ROUTE_UPDATE,LINK_UP,LINK_DOWN = range(3)
     def __init__(self,type,data=None):

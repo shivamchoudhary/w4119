@@ -10,7 +10,7 @@ import Queue
 
 class bfClient(threading.Thread):
     """
-    Class to manage all the clients.
+    Class to manage all the clients. It starts the CLI Loop'
     """
     def __init__(self, localport, timeout, ipaddress1, port1, weight1, *args):
         """
@@ -26,15 +26,18 @@ class bfClient(threading.Thread):
         self.localport = localport
         self.timeout = timeout
         self.neighbourTable = Common.Table()
-        self.neighbourTable.add_neighbour((ipaddress1, port1), (ipaddress1,weight1))
-        #If the optional arguments are specified/else we have already added them.
+        self.neighbourTable.add_neighbour((ipaddress1, port1), 
+                (ipaddress1,weight1))
+        #If the optional arguments are specified/else we have already added 
+        # them.
         if args[0]:
             for arg in args:
                 for triplets in arg:
                     ip, port, weight = triplets
-                    logging.debug("Adding %s with %s",(ip,port),(ip,weight))
-                    self.neighbourTable.add_neighbour((ip, port), (ip,weight))
-        logging.info("Initialized Client Current table is %s", self.neighbourTable.table)
+                    logging.debug("Adding %s with %s",(ip, port),(ip, weight))
+                    self.neighbourTable.add_neighbour((ip, port), (ip, weight))
+        logging.info("Initialized Client Current table is %s", 
+                self.neighbourTable.table)
     def run(self):
         console =Cli()
         console.cmdloop()
@@ -46,12 +49,12 @@ class Cli(cmd.Cmd):
         cmd.Cmd.__init__(self)
         self.SUPPORTED_COMMANDS = ['showrt','linkup','linkdown','close','help',
                 'tip']
-        self.prompt = "%>"
-        self.doc_header="Distributed Bellman Ford"
-        self.ruler="-"
-        self.intro = 'Welcome to Bellman Ford Router Shell. Type help or ? to'\
-                ' list Commands. Bonus tip: You can enter them in *any* case'
-        logging.info("CLI Loop Initialized")
+        self.prompt     = "%>"
+        self.doc_header ="Distributed Bellman Ford"
+        self.ruler      ="-"
+        self.intro      = 'Welcome to Bellman Ford Router Shell. Type help'
+        'or list Commands. Bonus tip: You can enter them in *any* case'
+        logging.info("Initializing CLI with (%s)",self.SUPPORTED_COMMANDS)
     def cmdloop(self):
         try:
             cmd.Cmd.cmdloop(self)
@@ -84,7 +87,8 @@ class Cli(cmd.Cmd):
             dst     = k[0]+":"+str(k[1])
             cost    = v[1]
             link    = v[0]
-            print "Destination = {}, Cost = {}, Link = ({})".format(dst, cost, link)            
+            print "Destination = {}, Cost = {}, Link = ({})".format(
+                    dst, cost, link)            
     def help_showrt(self):
         print "Syntax: SHOWRT"
         print "This allows the user to view the current routuing table of",\
@@ -137,16 +141,20 @@ def main():
     args.optional = zip(*[args.optional[i::3] for i in range(3)])
     #initialize all the queues here!!
     reciever_q = Queue.Queue()
+
     #initialize all the threads down here !!
     client = bfClient(args.localport, args.timeout, args.ipaddress1, 
     args.port1, args.weight1,args.optional)
     client.start()
-    sendsocket = Common.SendSocket(reciever_q)
+    sendsocket = Common.SendSocket(reciever_q,args.timeout)
     sendsocket.start()
     recieversocket = Common.RecieveSocket(args.localport,reciever_q)
     recieversocket.start()
     #TODO
     # Add Support to capture ctrl-c events in thread
+    sendsocket._dvchanged.set()
+    sendsocket._dvchanged.clear()
+    sendsocket.join()
 if __name__=="__main__":
     Common.initLogger(logging.DEBUG)
     main()
