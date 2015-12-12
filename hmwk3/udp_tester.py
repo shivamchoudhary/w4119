@@ -1,6 +1,9 @@
 import socket
 import time
 import json
+
+ip = '128.59.196.2'
+port = 4116
 def send(msg):
     ip = '127.0.0.1'
     port = 4115
@@ -19,7 +22,6 @@ class Message(object):
         self.data = data
 
 class Handlers(object):
-    
     def __init__(self,q):
         self.handlers = {
                 Message.ROUTE_UPDATE:self._route_UPDATE
@@ -29,10 +31,10 @@ class Handlers(object):
     def run(self):
         cmd = self.q
         self.handlers[cmd.type](cmd)
-
     def _route_UPDATE(self, msg):
+        msg.data['type'] = "update"
         data = json.dumps(msg.data)
         send(data)
-message = {'testing':"hh"}
+message = {'ip':ip,'port':port}
 Handlers(Message(Message.ROUTE_UPDATE,message))
 # send()

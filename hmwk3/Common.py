@@ -8,11 +8,12 @@ import logging
 import Queue
 import datetime
 def initLogger(level):
+    #unified logging module for all the libraries in this folder!.
     logging.basicConfig(
         format='Thread=[ %(threadName)s ]-level = [ %(levelname)s ]-'
         'Module=[ %(module)s ]-linenum=[ %(lineno)d ]- '
         'Function = [ %(funcName)s]-msg=[ %(message)s ]',
-        level=level,filename="client.log",filemode="w")
+        level=level, filename="client.log", filemode="w")
     
 class Table(object):
     """
@@ -22,42 +23,45 @@ class Table(object):
         """
         Starts with an empty table dictionary
         """
-        Table._dvchanged = False
         Table.table = {}
-        Table.updated_table = {}
     def add_neighbour(self, (ip, port), (link, weight)):
         """
         A Neighbour is defined by <ip,port> tuple.
         param:ip,port IP address,Port tuple of the neighbour
         param:link IP address to reach,weight link and Weight to the neighbour
+        Updates the Table with the last_updated value
         """
-        Table.updated_table[(ip, port)] = (link+":"+str(port), weight)
-        self.update_table()
+        logging.debug("Initializing (ip=%s),(port=%s),(link=%s),(weight=%s)",
+                ip, port, link, weight)
+        Table.table[(ip,port)] = {
+                "cost":weight,
+                "link":link+":"+str(port),
+                "last_updated":time.time()
+                }
+    
+    @staticmethod    
+    def update( dict ):
+        ip = dict['ip']
+        port = dict['port']
+        try:
+            Table.table[(ip,port)]["last_updated"] = time.time()
+        except KeyError:
+            pass
+        
+
     @staticmethod
     def show_neighbours():
         """
         Shows the current neighbours of the client.
         return: table of neighbours.
         """
-        return Table.updated_table
-    def update_table(self):
-        """
-        For the time being it looks a clever way of doing things. Maintain two
-        copies of the same table and update current one. After that compare 
-        the two tables, if they are not equal set the table. We should not call
-        it with add_neighbour because what if the user adds the same link!
-        """
-        if Table.table!=Table.updated_table:
-            Table._dvchanged = True
-        else:
-            Table._dvchanged = False
-        Table.table = Table.updated_table
+        return Table.table
 
 class RecieveSocket(threading.Thread):
     """
     Subclassing thread to make it a bit more generic
     """
-    def __init__(self,port,reciever_q):
+    def __init__(self, port):
         """
         The reciever does not require ip because its on localhost
         param:ip The IP address on which it is to be binded
@@ -67,29 +71,29 @@ class RecieveSocket(threading.Thread):
         self.ip = '127.0.0.1'
         self.port = port
         self._stop = threading.Event()
-        self.reciever_q = reciever_q
     def run(self):
         """
         Establish a listening port for the lifetime of the connection
         """
-        logging.debug("Initializing Reciever Socket")
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        s.bind((self.ip, self.port))
-        logging.debug("Reciever binding on (%s,%s) complete",self.ip,self.port)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            s.bind((self.ip, self.port))
+        except socket.error as e:
+            logging.error("Error %s while binding", e)
+        logging.debug("Reciever binding on (%s,%s) complete", self.ip, self.port)
         while True:
-            r,a,b  = select.select([s],[],[])
-            if r:
+            msg, _, _  = select.select([s],[],[])
+            if msg:
                 data = s.recvfrom(1024)
-                self.reciever_q.put(data)
-                logging.debug("Recieved '%s' from %s",data[0],data[1])
-            # if not r:
-                # pass
-                # return None
+                json_data = json.loads(data[0])
+                logging.debug("Recieved '%s' from %s", data[0], data[1])
+                Table.update(json_data)
             if self._stop.is_set():
                 print "Shutting Down the Client"
                 s.close()
                 return
+            time.sleep(0.2)
 
 class SendSocket(threading.Thread):
     """ 
@@ -99,7 +103,7 @@ class SendSocket(threading.Thread):
     """
     #TODO
     # Add a way to take neighbourTable and parse it
-    def __init__(self, sender_q,timeout):
+    def __init__(self, sender_q, timeout):
         super (SendSocket, self).__init__()
         self.handlers = {
                 Message.ROUTE_UPDATE:self._route_UPDATE,
@@ -109,34 +113,39 @@ class SendSocket(threading.Thread):
         self.timeout        = timeout
         self._dvchanged     = threading.Event() #event dv has changed
         self.stoprequest    = threading.Event()
+        self.lock           = threading.Lock()
         self.sender_q = sender_q
-    def run(self):
         logging.debug("Initializing sender socket")
+
+    def run(self):
         while not self._dvchanged.wait(timeout=self.timeout):
-            logging.debug('Self timeout triggered sending route updates')
+            logging.debug('Self timeout (%s) sending route updates',
+                    self.timeout)
+            self.lock.acquire()
+            neighbour = Table.table
+            for hostname,attributes in neighbour.iteritems():
+                if (time.time() - attributes['last_updated']) > 3*self.timeout:
+                    print "Timeout for ",hostname
+            self.lock.release()
             try:
                 logging.debug("data %s from queue",self.sender_q.get(True,0.1))
             except Queue.Empty as e:
                 continue
-            time.sleep(0.1)
+            time.sleep(0.2)
     def _route_UPDATE(self):
         pass
     def _link_UP(self):
         pass
     def _link_DOWN(self):
         pass
-    # def join(self,timeout=5):
-        # print "Stopping brace"
-        # self.stoprequest.set()
-        # super(SendSocket, self).join(timeout)
 
 
 class Message(object):
     """ 
     Messages exchanged between the clients. Each has data type.
-    ROUTE_UPDATE    :
-    LINK_UP         :
-    LINK_DOWN       :
+    ROUTE_UPDATE    :(ip,port,dv) tuple
+    LINK_UP         :(ip,port,dv)
+    LINK_DOWN       :(ip,port)
     """
     ROUTE_UPDATE,LINK_UP,LINK_DOWN = range(3)
     def __init__(self,type,data=None):
