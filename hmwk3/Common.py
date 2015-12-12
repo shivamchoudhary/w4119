@@ -36,7 +36,8 @@ class Table(object):
         Table.table[(ip,port)] = {
                 "cost":weight,
                 "link":link+":"+str(port),
-                "last_updated":time.time()
+                "last_updated":time.time(),
+                "active":True
                 }
     
     @staticmethod    
@@ -128,7 +129,7 @@ class SendSocket(threading.Thread):
             neighbour = Table.table
             for hostname,attributes in neighbour.iteritems():
                 if (time.time() - attributes['last_updated']) > 3*self.timeout:
-                    print "Timeout for ",hostname
+                    neighbour[hostname]['active'] = False
             self.lock.release()
             try:
                 logging.debug("data %s from queue",self.sender_q.get(True,0.1))

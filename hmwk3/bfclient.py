@@ -7,7 +7,6 @@ import time
 import logging
 from threading import Lock
 import Queue
-
 class bfClient(threading.Thread):
     """
     Class to manage all the clients. It starts the CLI Loop'
@@ -27,7 +26,7 @@ class bfClient(threading.Thread):
         self.timeout = timeout
         self.neighbourTable = Common.Table()
         self.neighbourTable.add_neighbour((ipaddress1, port1), 
-                (ipaddress1,weight1))
+                (ipaddress1, weight1))
         #If the optional arguments are specified/else we have already added 
         # them.
         if args[0]:
@@ -83,16 +82,23 @@ class Cli(cmd.Cmd):
         neighbourTable = Common.Table.show_neighbours()
         print "{} Distance vector list is".format(
                 datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))
+        
         for k,v in neighbourTable.iteritems():
             dst     = k[0]+":"+str(k[1])
-            cost    = v[1]
-            link    = v[0]
-            print "Destination = {}, Cost = {}, Link = ({})".format(
-                    dst, cost, link)            
+            cost    = v['cost']
+            link    = v['link']
+            if arg:
+                last_updated = datetime.datetime.fromtimestamp(
+                        v['last_updated']).strftime('%Y-%m-%d %H:%M:%S')
+                print "Destination = {}, Cost = {}, Link = ({}), Last Updated = {}".format(dst, cost, link, last_updated)
+            else: 
+                print "Destination = {}, Cost = {}, Link = ({})".format(
+                        dst, cost, link)
+            
     def help_showrt(self):
-        print "Syntax: SHOWRT"
-        print "This allows the user to view the current routuing table of",\
-                " the client"
+        print "Syntax: SHOWRT {optional any argument}"
+        print "This allows the user to view the current routing table of",\
+                " the client. If supplied with any arg last_update"
     def complete_default(self, text, line, begidx, endidx):
         if not text:
             completions = self.SUPPORTED_COMMANDS[:]
@@ -140,20 +146,20 @@ def main():
     args = parser.parse_args()
     args.optional = zip(*[args.optional[i::3] for i in range(3)])
     #initialize all the queues here!!
+    #Reciever Queue
     reciever_q = Queue.Queue()
-
+    #Sender Queue
+    neighbourTable_q = Queue.Queue()
     #initialize all the threads down here !!
     client = bfClient(args.localport, args.timeout, args.ipaddress1, 
     args.port1, args.weight1,args.optional)
     client.start()
     sendsocket = Common.SendSocket(reciever_q,args.timeout)
     sendsocket.start()
-    recieversocket = Common.RecieveSocket(args.localport,reciever_q)
+    recieversocket = Common.RecieveSocket(args.localport)
     recieversocket.start()
     #TODO
     # Add Support to capture ctrl-c events in thread
-    sendsocket._dvchanged.set()
-    sendsocket._dvchanged.clear()
     sendsocket.join()
 if __name__=="__main__":
     Common.initLogger(logging.DEBUG)
