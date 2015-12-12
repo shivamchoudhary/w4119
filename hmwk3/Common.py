@@ -70,6 +70,7 @@ class RecieveSocket(threading.Thread):
         super(RecieveSocket, self).__init__()
         self.ip = '127.0.0.1'
         self.port = port
+        self.lock = threading.Lock()
         self._stop = threading.Event()
     def run(self):
         """
@@ -88,7 +89,9 @@ class RecieveSocket(threading.Thread):
                 data = s.recvfrom(1024)
                 json_data = json.loads(data[0])
                 logging.debug("Recieved '%s' from %s", data[0], data[1])
+                self.lock.acquire()
                 Table.update(json_data)
+                self.lock.release()
             if self._stop.is_set():
                 print "Shutting Down the Client"
                 s.close()
