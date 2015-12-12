@@ -12,7 +12,8 @@ ipaddress2:=127.0.0.1
 port2:=4118
 weight2:=30.0
 #@many clients
-#directives
+directive:
+	python bfclient.py $(localport) $(timeout) $(ipaddress1) $(port1) $(weight1)
 bfclient:
 	python bfclient.py $(localport) $(timeout) $(ipaddress1) $(port1) $(weight1)
 bfclient2:
