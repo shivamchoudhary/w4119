@@ -2,8 +2,6 @@ import socket
 import time
 import json
 
-ip = '128.59.196.2'
-port = 4116
 def send(msg):
     ip = '127.0.0.1'
     port = 4115
@@ -35,6 +33,23 @@ class Handlers(object):
         msg.data['type'] = "update"
         data = json.dumps(msg.data)
         send(data)
-message = {'ip':ip,'port':port}
+
+message = {
+        'ip':'128.59.196.2',
+        'port':4116,
+        'link':'128.59.196.2:4116',
+        'cost':'5',
+        'dvtable':{
+            '127.0.0.1:4115':{
+                "cost":5,
+                },
+            '128.59.196.2:4118':{
+                "cost":5,
+                },
+            '128.59.196.2:4117':{
+                "cost":10
+                }
+            }
+        }
 Handlers(Message(Message.ROUTE_UPDATE,message))
 # send()
