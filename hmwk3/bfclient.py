@@ -7,6 +7,7 @@ import time
 import logging
 from threading import Lock
 import Queue
+
 class bfClient(threading.Thread):
     """
     Class to manage all the clients. It starts the CLI Loop'
@@ -24,69 +25,81 @@ class bfClient(threading.Thread):
         self.ip = '127.0.0.1' #Each client is binded on localhost
         self.localport = localport
         self.timeout = timeout
-        self.neighbourTable = Common.Table()
-        self.neighbourTable.add_neighbour((ipaddress1, port1), 
-                (ipaddress1, weight1))
-        #If the optional arguments are specified/else we have already added 
-        # them.
+        self.info = Common.Table(self.ip, self.localport)
+        self.info.add_neighbour((ipaddress1, port1), 
+                (ipaddress1+":"+str(port1), weight1),is_neighbour=True)
+        #If optional arguments are specified/else already added them.
         if args[0]:
             for arg in args:
                 for triplets in arg:
                     ip, port, weight = triplets
-                    logging.debug("Adding %s with %s",(ip, port),(ip, weight))
-                    self.neighbourTable.add_neighbour((ip, port), (ip, weight))
+                    logging.debug("Adding %s with %s",(ip, port),
+                            (ip+":"+str(port), weight))
+                    self.info.add_neighbour((ip, port), (ip+":"+str(port),
+                        weight),is_neighbour=True)
         logging.info("Initialized Client Current table is %s", 
-                self.neighbourTable.table)
+                self.info.information)
+    
     def run(self):
         console =Cli()
         console.cmdloop()
+
 class Cli(cmd.Cmd):
     """
-    Subclassed cmd for console Management!!
+    CLI for console Management!!
     """
     def __init__(self):
         cmd.Cmd.__init__(self)
-        self.SUPPORTED_COMMANDS = ['showrt','linkup','linkdown','close','help',
-                'tip']
+        self.SUPPORTED_COMMANDS = [
+                'showrt','linkup','linkdown','close','help','tip'
+                ]
         self.prompt     = "%>"
-        self.doc_header ="Distributed Bellman Ford"
-        self.ruler      ="-"
+        self.doc_header = "Distributed Bellman Ford"
+        self.ruler      = "-"
         self.intro      = 'Welcome to Bellman Ford Router Shell. Type help'
         'or list Commands. Bonus tip: You can enter them in *any* case'
-        logging.info("Initializing CLI with (%s)",self.SUPPORTED_COMMANDS)
+        logging.info("Initializing CLI with (%s)", self.SUPPORTED_COMMANDS)
+    
     def cmdloop(self):
         try:
             cmd.Cmd.cmdloop(self)
         except TypeError as e:
             print "Wrong Syntax use help <command> to find correct usage.",e
             self.cmdloop()
-    def precmd(self,line):
-        logging.debug("Input:'%s'",line)
+    def precmd(self, line):
+        """
+        Converts each line to lower case so that any type of input accepted
+        """
+        logging.debug("Input:'%s'", line)
         line = line.lower()
         return cmd.Cmd.precmd(self, line)
+    
     def do_linkdown(self,ip_address,port):
 
         pass
+    
     def help_linkdown(self):
         print "Syntax: LINKDOWN {ip_address port}"
         print "This allows the user to destroy an existing link,i.e change",\
                 'the link cost to infinity to the mentioned neighbour.'
+    
     def do_linkup(self, ip_address, port):
         pass
+    
     def help_linkup(self):
         print "Syntax: LINKUP {ip_address}"
         print "This allows the user to restore the link to the mentioned",\
                 "neighbour to the original value after it was destroyed by,"\
                 "LINKDOWN"
+    
     def do_showrt(self, arg):
         neighbourTable = Common.Table.show_neighbours()
         print "{} Distance vector list is".format(
                 datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))
-        
         for k,v in neighbourTable.iteritems():
-            dst     = k[0]+":"+str(k[1])
-            cost    = v['cost']
-            link    = v['link']
+            dst     = k
+            cost = v['cost']
+            link = v['link']
             if arg:
                 last_updated = datetime.datetime.fromtimestamp(
                         v['last_updated']).strftime('%Y-%m-%d %H:%M:%S')
@@ -145,17 +158,17 @@ def main():
             default=argparse.SUPPRESS, help="Other Arguments")
     args = parser.parse_args()
     args.optional = zip(*[args.optional[i::3] for i in range(3)])
-    #initialize all the queues here!!
-    #Reciever Queue
+    #Queue
     reciever_q = Queue.Queue()
-    #Sender Queue
-    neighbourTable_q = Queue.Queue()
-    #initialize all the threads down here !!
+    
+    #CLI thread
     client = bfClient(args.localport, args.timeout, args.ipaddress1, 
     args.port1, args.weight1,args.optional)
     client.start()
-    sendsocket = Common.SendSocket(reciever_q,args.timeout)
+    #Sender thread
+    sendsocket = Common.SendSocket(args.timeout)
     sendsocket.start()
+    #Reciever Thread
     recieversocket = Common.RecieveSocket(args.localport)
     recieversocket.start()
     #TODO

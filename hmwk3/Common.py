@@ -19,14 +19,23 @@ class Table(object):
     """
     A Generic class to hold the router Neighbour information.
     """
-    def __init__(self,ip,port):
+    def __init__(self, ip, port):
         """
         Starts with an empty table dictionary
         """
-        Table.table = {}
-        Table.selfname = ip+":"+str(port)
+        self.ip = ip
+        self.port = port
+        Table.information = {
+                'ip':self.ip,
+                'localport':self.port,
+                'link':self.ip+":"+str(self.port),
+                'dvtable':{
+                    },
+                'neighbours':{
+                    }
+                }
     @staticmethod
-    def add_neighbour((ip, port), (link, weight)):
+    def add_neighbour((ip, port), (link, weight), is_neighbour =False):
         """
         A Neighbour is defined by <ip,port> tuple.
         param:ip,port IP address,Port tuple of the neighbour
@@ -35,43 +44,48 @@ class Table(object):
         """
         logging.debug("Initializing (ip=%s),(port=%s),(link=%s),(weight=%s)",
                 ip, port, link, weight)
-        Table.table[ip+":"+str(port)] = {
-                "cost":float(weight),
-                "link":link+":"+str(port),
-                "last_updated":time.time(),
-                "active":True
+        destination = ip+":"+str(port)
+        Table.information['dvtable'][destination] = {}
+        dvtable_info = {
+                'ip':ip,
+                'port':port,
+                'cost':float(weight),
+                'link':link,
                 }
-    
+        Table.information['dvtable'][destination] = dvtable_info 
+        if is_neighbour:
+            dvtable_info['last_updated'] = time.time()
+            dvtable_info['active'] = True
+            Table.information['neighbours'][destination] =dvtable_info 
     @staticmethod    
     def update(dict):
         """
-        Extracts the IP and updates the last_updated variable for that hostname
+        Extracts the IP and updates the last_updated variable for neighbour and
+        dvtable
         """
         ip = dict['ip']
         port = dict['port']
-        try:
-            logging.debug("Updating last_updated for (%s:%s)",ip,port)
-            Table.table[(ip,port)]["last_updated"] = time.time()
-        except KeyError:
-            """
-            New entry add to table
-            """
-            logging.debug("Entry for (%s:%s) does not exists,adding",ip,port)
-            Table.add_neighbour((ip, port), (dict['link'], dict['cost']))
+        link = dict['link']
+        dvtable = dict['dvtable']
+        #update info wrt neigbour
+        Table.information['neighbours'][link]['last_updated']= time.time()
         Table.run_bellman(dict)
+    
+    
     @staticmethod    
-    def run_bellman(dict):
-        for hostname in dict['dvtable'].keys():
-            if hostname in Table.table.keys():
-                print hostname
-                present_cost = Table.table[hostname]['cost']
-                advertised_cost = dict['dvtable'][hostname]['cost']
-                peer = dict['link']
-                mycost = Table.table[peer]['cost']
-                totalcost = mycost+advertised_cost
-                if totalcost < present_cost:
-                    print "Deal"
+    def run_bellman(recv_dvtable):
+        self_cost = Table.information['neighbours'][recv_dvtable['link']]['cost']
+        recv_dvtable['dvtable'].pop(Table.information['link']) #to remove self
+        for destination, metrics in recv_dvtable['dvtable'].iteritems():
+            try:
+                cur_cost = Table.information['dvtable'][destination]['cost']
+                adv_cost = float(metrics['cost'])
+                if (self_cost + adv_cost < cur_cost):
+                    Table.information['dvtable'][destination]['cost'] = self_cost+adv_cost
+                    Table.information['dvtable'][destination]['link'] = recv_dvtable['link']
 
+            except KeyError:
+                Table.add_neighbour((metrics['ip'],metrics['port']),(recv_dvtable['link'],metrics['cost']+self_cost))
 
     @staticmethod
     def show_neighbours():
@@ -79,7 +93,7 @@ class Table(object):
         Shows the current neighbours of the client.
         return: dvtable of neighbours.
         """
-        return Table.table
+        return Table.information['dvtable']
 
 class RecieveSocket(threading.Thread):
     """
