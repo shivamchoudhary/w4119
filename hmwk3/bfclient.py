@@ -51,7 +51,8 @@ class Cli(cmd.Cmd):
     def __init__(self):
         cmd.Cmd.__init__(self)
         self.SUPPORTED_COMMANDS = [
-                'showrt','linkup','linkdown','close','help','tip'
+                'showrt','linkup','linkdown','close','help','tip',
+                'showneigbours'
                 ]
         self.prompt     = "%>"
         self.doc_header = "Distributed Bellman Ford"
@@ -75,7 +76,6 @@ class Cli(cmd.Cmd):
         return cmd.Cmd.precmd(self, line)
     
     def do_linkdown(self,ip_address,port):
-
         pass
     
     def help_linkdown(self):
@@ -103,11 +103,21 @@ class Cli(cmd.Cmd):
             if arg:
                 last_updated = datetime.datetime.fromtimestamp(
                         v['last_updated']).strftime('%Y-%m-%d %H:%M:%S')
-                print "Destination = {}, Cost = {}, Link = ({}), Last Updated = {}".format(dst, cost, link, last_updated)
+                status = v['active']
+                print "Destination = {}, Cost = {},"\
+                        " Link = ({}), Last Updated = {}, Active = {}"\
+                        .format(dst,cost, link, last_updated, status)
             else: 
                 print "Destination = {}, Cost = {}, Link = ({})".format(
                         dst, cost, link)
             
+    def do_showneighbours(self,arg):
+        """
+        """
+        neighbourTable = Common.Table.information['neighbours']
+        for k,v in neighbourTable.iteritems():
+            print "Link = {}, Active = {}".format(k,v['active'])
+
     def help_showrt(self):
         print "Syntax: SHOWRT {optional any argument}"
         print "This allows the user to view the current routing table of",\
@@ -139,8 +149,7 @@ class Cli(cmd.Cmd):
     def help_help(self):
         print "Syntax: help"
         print "Well it doesn't make sense to ask for help on help,Inception Maybe!!"
-
-
+    
 def main():
     parser = argparse.ArgumentParser(description='Bellman-Ford Distributed'
             'Algorithm')

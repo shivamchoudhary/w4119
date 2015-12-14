@@ -81,11 +81,13 @@ class Table(object):
                 cur_cost = Table.information['dvtable'][destination]['cost']
                 adv_cost = float(metrics['cost'])
                 if (self_cost + adv_cost < cur_cost):
-                    Table.information['dvtable'][destination]['cost'] = self_cost+adv_cost
-                    Table.information['dvtable'][destination]['link'] = recv_dvtable['link']
-
+                    Table.information['dvtable'][destination]['cost'] = \
+                            self_cost+adv_cost
+                    Table.information['dvtable'][destination]['link'] = \
+                            recv_dvtable['link']
             except KeyError:
-                Table.add_neighbour((metrics['ip'],metrics['port']),(recv_dvtable['link'],metrics['cost']+self_cost))
+                Table.add_neighbour((metrics['ip'],metrics['port']),
+                        (recv_dvtable['link'], metrics['cost']+self_cost))
 
     @staticmethod
     def show_neighbours():
@@ -164,10 +166,13 @@ class SendSocket(threading.Thread):
             logging.debug('Self timeout (%s) sending route updates',
                     self.timeout)
             self.lock.acquire()
-            neighbour = Table.table
-            for hostname, attributes in neighbour.iteritems():
-                if (time.time() - attributes['last_updated']) > 3*self.timeout:
-                    neighbour[hostname]['active'] = False
+            neighbours = Table.information['neighbours']
+            for neighbour in neighbours:
+                if ((time.time()- neighbours[neighbour]['last_updated'])>
+                        3*self.timeout):
+                    logging.debug("3*Timeout making (%s) inactive",neighbour)
+                    Table.information['neighbours'][neighbour]\
+                            ['active']= False
             self.lock.release()
             time.sleep(0.2)
     def _route_UPDATE(self):
