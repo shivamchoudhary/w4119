@@ -7,6 +7,8 @@ import time
 import logging
 import Queue
 import datetime
+import pprint
+pp = pprint.PrettyPrinter(indent=2)
 def initLogger(level):
     #unified logging module for all the libraries in this folder!.
     logging.basicConfig(
@@ -25,13 +27,18 @@ class Table(object):
         """
         self.ip = ip
         self.port = port
-        Table.information = {
-                'ip':self.ip,
-                'localport':self.port,
-                'link':self.ip+":"+str(self.port),
-                'dvtable':{
-                    },
-                'neighbours':{
+        
+        Table.dvinfo = {
+                "dvtable":{
+                    }
+                }
+
+
+        Table.neighbourinfo = {
+                "ip":self.ip,
+                "localport":self.port,
+                "link":self.ip+":"+str(self.port),
+                "neighbours":{
                     }
                 }
     @staticmethod
@@ -42,21 +49,21 @@ class Table(object):
         param:link IP address to reach,weight link and Weight to the neighbour
         Updates the Table with the last_updated value
         """
-        logging.debug("Initializing (ip=%s),(port=%s),(link=%s),(weight=%s)",
-                ip, port, link, weight)
-        destination = ip+":"+str(port)
-        Table.information['dvtable'][destination] = {}
+        Table.dvinfo['dvtable'][link] = {}
         dvtable_info = {
                 'ip':ip,
                 'port':port,
                 'cost':float(weight),
-                'link':link,
+                'link':link
                 }
-        Table.information['dvtable'][destination] = dvtable_info 
+        Table.dvinfo['dvtable'][link] = dvtable_info
         if is_neighbour:
-            dvtable_info['last_updated'] = time.time()
-            dvtable_info['active'] = True
-            Table.information['neighbours'][destination] =dvtable_info 
+            Table.neighbourinfo['neighbours'][link] = {}
+            Table.neighbourinfo['neighbours'][link]['cost'] = float(weight)
+            Table.neighbourinfo['neighbours'][link]['link'] = link
+            Table.neighbourinfo['neighbours'][link]['last_updated'] = \
+                    time.time()
+            Table.neighbourinfo['neighbours'][link]['active'] = True
     @staticmethod    
     def update(dict):
         """
@@ -68,9 +75,9 @@ class Table(object):
         link = dict['link']
         dvtable = dict['dvtable']
         #update info wrt neigbour
-        Table.information['neighbours'][link]['last_updated']= time.time()
+        Table.neighbourinfo['neighbours'][link]['last_updated']= time.time()
+        Table.neighbourinfo['neighbours'][link]['active'] = True
         Table.run_bellman(dict)
-    
     
     @staticmethod    
     def run_bellman(recv_dvtable):
@@ -149,16 +156,10 @@ class SendSocket(threading.Thread):
     # Add a way to take neighbourTable and parse it
     def __init__(self, timeout):
         super (SendSocket, self).__init__()
-        self.handlers = {
-                Message.ROUTE_UPDATE:self._route_UPDATE,
-                Message.LINK_UP:self._link_UP,
-                Message.LINK_DOWN:self._link_DOWN
-        }
         self.timeout        = timeout
         self._dvchanged     = threading.Event() #event dv has changed
         self.stoprequest    = threading.Event()
         self.lock           = threading.Lock()
-        #TODO Add the port name and ip address mapping here.
         logging.debug("Initializing sender socket on (%s:%s)")
 
     def run(self):
@@ -168,20 +169,15 @@ class SendSocket(threading.Thread):
             self.lock.acquire()
             neighbours = Table.information['neighbours']
             for neighbour in neighbours:
-                if ((time.time()- neighbours[neighbour]['last_updated'])>
-                        3*self.timeout):
-                    logging.debug("3*Timeout making (%s) inactive",neighbour)
-                    Table.information['neighbours'][neighbour]\
-                            ['active']= False
+                if neighbours[neighbour]['active']:
+                    if ((time.time()- neighbours[neighbour]['last_updated'])>
+                            3*self.timeout):
+                        logging.debug("3*Timeout making (%s) inactive",neighbour)
+                        Table.information['neighbours'][neighbour]\
+                                ['active']= False
             self.lock.release()
             time.sleep(0.2)
-    def _route_UPDATE(self):
-        pass
-    def _link_UP(self):
-        pass
-    def _link_DOWN(self):
-        pass
-
+    
 class Message(object):
     """ 
     Messages exchanged between the clients. Each has data type.
@@ -189,9 +185,8 @@ class Message(object):
     LINK_UP         :(ip,port,dv)
     LINK_DOWN       :(ip,port)
     """
-    ROUTE_UPDATE,LINK_UP,LINK_DOWN = range(3)
+    ROUTE_UPDATE,LINK_UP,LINK_DOWN,CLOSE = range(4)
     def __init__(self,type,data=None):
         self.type = type
         self.data = data
 
-      

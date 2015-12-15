@@ -7,7 +7,8 @@ import time
 import logging
 from threading import Lock
 import Queue
-
+import pprint
+pp= pprint.PrettyPrinter(indent=4)
 class bfClient(threading.Thread):
     """
     Class to manage all the clients. It starts the CLI Loop'
@@ -27,7 +28,7 @@ class bfClient(threading.Thread):
         self.timeout = timeout
         self.info = Common.Table(self.ip, self.localport)
         self.info.add_neighbour((ipaddress1, port1), 
-                (ipaddress1+":"+str(port1), weight1),is_neighbour=True)
+                (ipaddress1+":"+str(port1), weight1), is_neighbour=True)
         #If optional arguments are specified/else already added them.
         if args[0]:
             for arg in args:
@@ -36,12 +37,11 @@ class bfClient(threading.Thread):
                     logging.debug("Adding %s with %s",(ip, port),
                             (ip+":"+str(port), weight))
                     self.info.add_neighbour((ip, port), (ip+":"+str(port),
-                        weight),is_neighbour=True)
-        logging.info("Initialized Client Current table is %s", 
-                self.info.information)
-    
+                        weight), is_neighbour=True)
+        logging.info("Neighbour Table is %s",self.info.neighbourinfo)
+        logging.info("DV Table is %s",self.info.dvinfo)
     def run(self):
-        console =Cli()
+        console = Cli()
         console.cmdloop()
 
 class Cli(cmd.Cmd):
@@ -57,8 +57,8 @@ class Cli(cmd.Cmd):
         self.prompt     = "%>"
         self.doc_header = "Distributed Bellman Ford"
         self.ruler      = "-"
-        self.intro      = 'Welcome to Bellman Ford Router Shell. Type help'
-        'or list Commands. Bonus tip: You can enter them in *any* case'
+        self.intro      = 'Welcome to Bellman Ford Router Shell. Type help'\
+        ' for list Commands. Bonus tip: You can enter them in *any* case'
         logging.info("Initializing CLI with (%s)", self.SUPPORTED_COMMANDS)
     
     def cmdloop(self):
@@ -75,17 +75,41 @@ class Cli(cmd.Cmd):
         line = line.lower()
         return cmd.Cmd.precmd(self, line)
     
-    def do_linkdown(self,ip_address,port):
-        pass
+    def do_linkdown(self,line):
+        try:
+            (ip, port) = line.split(" ")
+            link = ip+":"+port
+            if link in Common.Table.neighbourinfo['neighbours'].keys():
+                Common.Table.dvinfo['dvtable'][link]['cost'] = \
+                        float("inf")
+                Common.Table.neighbourinfo['neighbours'][link]['last_updated'] =\
+                        time.time()
+                Common.Table.neighbourinfo['neighbours'][link]['active']=False
+            else:
+                print "The link %s is not your direct neighbour",link
+        except ValueError:
+            print "Wrong Syntax use help <command> to find correct usage."
+            self.cmdloop()
     
     def help_linkdown(self):
         print "Syntax: LINKDOWN {ip_address port}"
         print "This allows the user to destroy an existing link,i.e change",\
                 'the link cost to infinity to the mentioned neighbour.'
     
-    def do_linkup(self, ip_address, port):
-        pass
-    
+    def do_linkup(self, line):
+        try:
+            (ip,port) = line.split(" ")
+            link = ip+":"+port
+            if link not in Common.Table.neighbourinfo['neighbours'].keys():
+                print "Not your neighbour"
+            else:
+                cost = Common.Table.neighbourinfo['neighbours'][link]['cost']
+                Common.Table.dvinfo['dvtable'][link]['cost'] = cost
+                logging.debug("Restoring cost %s for %s",cost,link )
+        except ValueError:
+            print "Wrong Syntax use help <command> to find correct usage."
+            self.cmdloop()
+            
     def help_linkup(self):
         print "Syntax: LINKUP {ip_address}"
         print "This allows the user to restore the link to the mentioned",\
@@ -93,13 +117,12 @@ class Cli(cmd.Cmd):
                 "LINKDOWN"
     
     def do_showrt(self, arg):
-        neighbourTable = Common.Table.show_neighbours()
         print "{} Distance vector list is".format(
                 datetime.datetime.now().strftime("%b %d %Y %H:%M:%S"))
-        for k,v in neighbourTable.iteritems():
+        for k, v in Common.Table.dvinfo['dvtable'].iteritems():
             dst     = k
-            cost = v['cost']
-            link = v['link']
+            cost    = v['cost']
+            link    = v['link']
             if arg:
                 last_updated = datetime.datetime.fromtimestamp(
                         v['last_updated']).strftime('%Y-%m-%d %H:%M:%S')
@@ -113,9 +136,10 @@ class Cli(cmd.Cmd):
             
     def do_showneighbours(self,arg):
         """
+        Shows the neighbours of the particular client.
         """
-        neighbourTable = Common.Table.information['neighbours']
-        for k,v in neighbourTable.iteritems():
+        neighbourTable = Common.Table.neighbourinfo['neighbours']
+        for k, v in neighbourTable.iteritems():
             print "Link = {}, Active = {}".format(k,v['active'])
 
     def help_showrt(self):
