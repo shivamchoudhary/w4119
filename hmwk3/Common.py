@@ -49,14 +49,15 @@ class Table(object):
         param:link IP address to reach,weight link and Weight to the neighbour
         Updates the Table with the last_updated value
         """
-        Table.dvinfo['dvtable'][link] = {}
-        dvtable_info = {
-                'ip':ip,
-                'port':port,
-                'cost':float(weight),
-                'link':link
+        logging.debug("Adding ip:%s,port:%s,link:%s,weight:%s.",ip,port,
+                link,weight)
+        destination = ip+":"+str(port)
+        Table.dvinfo['dvtable'][destination] = {
+                "ip":ip,
+                "port":port,
+                "cost":float(weight),
+                "link":link
                 }
-        Table.dvinfo['dvtable'][link] = dvtable_info
         if is_neighbour:
             Table.neighbourinfo['neighbours'][link] = {}
             Table.neighbourinfo['neighbours'][link]['cost'] = float(weight)
@@ -81,28 +82,38 @@ class Table(object):
     
     @staticmethod    
     def run_bellman(recv_dvtable):
-        self_cost = Table.information['neighbours'][recv_dvtable['link']]['cost']
-        recv_dvtable['dvtable'].pop(Table.information['link']) #to remove self
+        self_cost = Table.dvinfo['dvtable'][recv_dvtable['link']]['cost']
+        recv_dvtable['dvtable'].pop(Table.neighbourinfo['link']) #remove self
         for destination, metrics in recv_dvtable['dvtable'].iteritems():
             try:
-                cur_cost = Table.information['dvtable'][destination]['cost']
+                cur_cost = Table.dvinfo['dvtable'][destination]['cost']
                 adv_cost = float(metrics['cost'])
-                if (self_cost + adv_cost < cur_cost):
-                    Table.information['dvtable'][destination]['cost'] = \
-                            self_cost+adv_cost
-                    Table.information['dvtable'][destination]['link'] = \
+                if (self_cost+adv_cost < cur_cost):
+                    Table.dvinfo['dvtable'][destination]['cost'] = self_cost+\
+                            adv_cost
+                    Table.dvinfo['dvtable'][destination]['link'] = \
                             recv_dvtable['link']
             except KeyError:
-                Table.add_neighbour((metrics['ip'],metrics['port']),
-                        (recv_dvtable['link'], metrics['cost']+self_cost))
+                logging.debug("New Neighbour %s",destination)
+                Table.add_neighbour((metrics['ip'],metrics['port']),\
+                        (recv_dvtable['link'],self_cost+metrics['cost']))
+            # adv_cost = float(metrics['cost'])
+            # if (self_cost + adv_cost < cur_cost):
+                    # Table.dvinfo['dvtable'][destination]['cost'] = \
+                        # self_cost+adv_cost
+                    # Table.dvinfo['dvtable'][destination]['link'] = \
+                        # recv_dvtable['link']
+            # logging.debug("New Neighbour %s",recv_dvtable['link'])
+            # Table.add_neighbour((metrics['ip'],metrics['port']),
+                    # (recv_dvtable['link'], metrics['cost']+self_cost))
 
-    @staticmethod
-    def show_neighbours():
-        """
-        Shows the current neighbours of the client.
-        return: dvtable of neighbours.
-        """
-        return Table.information['dvtable']
+    # @staticmethod
+    # def show_neighbours():
+        # """
+        # Shows the current neighbours of the client.
+        # return: dvtable of neighbours.
+        # """
+        # return Table.information['dvtable']
 
 class RecieveSocket(threading.Thread):
     """

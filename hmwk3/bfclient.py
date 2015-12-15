@@ -7,8 +7,6 @@ import time
 import logging
 from threading import Lock
 import Queue
-import pprint
-pp= pprint.PrettyPrinter(indent=4)
 class bfClient(threading.Thread):
     """
     Class to manage all the clients. It starts the CLI Loop'
@@ -80,8 +78,10 @@ class Cli(cmd.Cmd):
             (ip, port) = line.split(" ")
             link = ip+":"+port
             if link in Common.Table.neighbourinfo['neighbours'].keys():
+                newlink = "Unknown"
                 Common.Table.dvinfo['dvtable'][link]['cost'] = \
                         float("inf")
+                Common.Table.dvinfo['dvtable'][link]['link'] = newlink
                 Common.Table.neighbourinfo['neighbours'][link]['last_updated'] =\
                         time.time()
                 Common.Table.neighbourinfo['neighbours'][link]['active']=False
@@ -101,10 +101,12 @@ class Cli(cmd.Cmd):
             (ip,port) = line.split(" ")
             link = ip+":"+port
             if link not in Common.Table.neighbourinfo['neighbours'].keys():
-                print "Not your neighbour"
+                print "%s your neighbour",link
             else:
                 cost = Common.Table.neighbourinfo['neighbours'][link]['cost']
+                oldlink = Common.Table.neighbourinfo['neighbours'][link]['link']
                 Common.Table.dvinfo['dvtable'][link]['cost'] = cost
+                Common.Table.dvinfo['dvtable'][link]['link'] = oldlink
                 logging.debug("Restoring cost %s for %s",cost,link )
         except ValueError:
             print "Wrong Syntax use help <command> to find correct usage."
