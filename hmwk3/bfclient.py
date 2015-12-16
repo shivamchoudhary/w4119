@@ -7,12 +7,13 @@ import time
 import logging
 from threading import Lock
 import Queue
+
 class bfClient(threading.Thread):
     """
     Class to manage all the clients. It starts the CLI Loop'
     """
-    def __init__(self, commonq,localport, timeout, ipaddress1, port1, weight1, 
-            *args):
+    def __init__(self, commonq, localport, timeout, ipaddress1, port1, 
+            weight1, *args):
         """
         param:localport Local port on which the client is hosted.
         param:timeout The timeout related with the client.

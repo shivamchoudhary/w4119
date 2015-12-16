@@ -31,8 +31,6 @@ class Table(object):
                 "dvtable":{
                     }
                 }
-
-
         Table.neighbourinfo = {
                 "ip":self.ip,
                 "localport":self.port,
@@ -40,6 +38,7 @@ class Table(object):
                 "neighbours":{
                     }
                 }
+
     @staticmethod
     def add_neighbour((ip, port), (link, weight), is_neighbour =False):
         """
@@ -77,6 +76,7 @@ class Table(object):
         #update info wrt neigbour
         Table.neighbourinfo['neighbours'][link]['last_updated']= time.time()
         Table.neighbourinfo['neighbours'][link]['active'] = True
+        logging.debug("Updating info for %s", link)
         Table.run_bellman(dict)
     
     @staticmethod    
@@ -102,7 +102,7 @@ class RecieveSocket(threading.Thread):
     Primary work is to update the table with the information it recieves from 
     the sockets.
     """
-    def __init__(self, commonq,port):
+    def __init__(self, commonq, port):
         """
         The reciever does not require ip because its on localhost
         param:ip The IP address on which it is to be binded
@@ -151,20 +151,29 @@ class SendSocket(threading.Thread):
         self.stoprequest    = threading.Event()
         self.lock           = threading.Lock()
         logging.debug("Initializing sender socket on (%s:%s)")
-
     def run(self):
         while not self._dvchanged.wait(timeout=self.timeout):
             logging.debug('Self timeout (%s) sending route updates',
                     self.timeout)
             self.lock.acquire()
-            neighbours = Table.information['neighbours']
-            for neighbour in neighbours:
-                if neighbours[neighbour]['active']:
-                    if ((time.time()- neighbours[neighbour]['last_updated'])>
-                            3*self.timeout):
-                        logging.debug("3*Timeout making (%s) inactive",neighbour)
-                        Table.information['neighbours'][neighbour]\
-                                ['active']= False
+            for link in Table.neighbourinfo['neighbours'].keys():
+                if Table.neighbourinfo['neighbours'][link]['active']:
+                    if ((time.time()-Table.neighbourinfo['neighbours']\
+                            [link]['last_updated'])> 3*self.timeout):
+                        Table.neighbourinfo['neighbours'][link]['active']=False
+                        Table.neighbourinfo['neighbours'][link]['cost']=\
+                                float("inf")
+                        Table.dvinfo['dvtable'][link]['cost'] = float ("inf")
+                    dvtable = Table.dvinfo['dvtable']
+                    message = {
+                            'ip':Table.neighbourinfo['ip'],
+                            'port':Table.neighbourinfo['localport'],
+                            'link':Table.neighbourinfo['link'],
+                            'cost':Table.dvinfo['dvtable'][link]['cost'],
+                            'dvtable':dvtable
+                            }
+                    print message['dvtable']
+            
             self.lock.release()
             time.sleep(0.2)
     
