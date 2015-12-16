@@ -11,7 +11,8 @@ class bfClient(threading.Thread):
     """
     Class to manage all the clients. It starts the CLI Loop'
     """
-    def __init__(self, localport, timeout, ipaddress1, port1, weight1, *args):
+    def __init__(self, commonq,localport, timeout, ipaddress1, port1, weight1, 
+            *args):
         """
         param:localport Local port on which the client is hosted.
         param:timeout The timeout related with the client.
@@ -20,8 +21,8 @@ class bfClient(threading.Thread):
         param:*args Arguments (3 tuples) for optional neighbour.
         """
         super(bfClient, self).__init__()
-        self._stop = threading.Event()
         self.ip = '127.0.0.1' #Each client is binded on localhost
+        self.commonq = commonq
         self.localport = localport
         self.timeout = timeout
         self.info = Common.Table(self.ip, self.localport)
@@ -41,6 +42,8 @@ class bfClient(threading.Thread):
     def run(self):
         console = Cli()
         console.cmdloop()
+        data = "close"
+        self.commonq.put(data)
 
 class Cli(cmd.Cmd):
     """
@@ -73,7 +76,11 @@ class Cli(cmd.Cmd):
         line = line.lower()
         return cmd.Cmd.precmd(self, line)
     
-    def do_linkdown(self,line):
+    def do_linkdown(self, line):
+        """
+        param line: the input neighbour which has died. 
+        Sets link distance to "inf"
+        """
         try:
             (ip, port) = line.split(" ")
             link = ip+":"+port
@@ -131,23 +138,21 @@ class Cli(cmd.Cmd):
                 status = v['active']
                 print "Destination = {}, Cost = {},"\
                         " Link = ({}), Last Updated = {}, Active = {}"\
-                        .format(dst,cost, link, last_updated, status)
+                        .format(dst, cost, link, last_updated, status)
             else: 
                 print "Destination = {}, Cost = {}, Link = ({})".format(
                         dst, cost, link)
             
-    def do_showneighbours(self,arg):
-        """
-        Shows the neighbours of the particular client.
+    def do_showneighbours(self, arg):
+        """ Syntax: SHOWRT {optional any argument}
+        This allows the user to view the current routing table of",the client. 
+        If supplied with any arg last_update,shows the neighbours of the 
+        particular client.
         """
         neighbourTable = Common.Table.neighbourinfo['neighbours']
         for k, v in neighbourTable.iteritems():
             print "Link = {}, Active = {}".format(k,v['active'])
 
-    def help_showrt(self):
-        print "Syntax: SHOWRT {optional any argument}"
-        print "This allows the user to view the current routing table of",\
-                " the client. If supplied with any arg last_update"
     def complete_default(self, text, line, begidx, endidx):
         if not text:
             completions = self.SUPPORTED_COMMANDS[:]
@@ -156,11 +161,11 @@ class Cli(cmd.Cmd):
                     for f in self.SUPPORTED_COMMANDS if f.startswith(text)
                     ]
         return completions
-    def do_close(self):
-        pass
-    def help_close(self):
-        print "Syntax: CLOSE"
-        print "With this command the client process should close/shutdown."
+    def do_close(self,line):
+        """Syntax: close, With this command the Client process closes/shutsdown
+        ."""
+        print "Bye from Shell!!"
+        return True
     def do_tip(self,line):
         print "1) You can type help <command_name> to get syntax and help."
         print "2) You can type in any case."
@@ -170,8 +175,10 @@ class Cli(cmd.Cmd):
         print "Command Not recognized,try help or press <tab>"
     def emptyline(self):
         pass
-    def do_help(self, args):
-        cmd.Cmd.do_help(self, args)
+    # def do_help(self, args):
+        # pass
+
+        # cmd.Cmd.do_help(self, args)
     def help_help(self):
         print "Syntax: help"
         print "Well it doesn't make sense to ask for help on help,Inception Maybe!!"
@@ -194,21 +201,19 @@ def main():
     args = parser.parse_args()
     args.optional = zip(*[args.optional[i::3] for i in range(3)])
     #Queue
-    reciever_q = Queue.Queue()
-    
     #CLI thread
-    client = bfClient(args.localport, args.timeout, args.ipaddress1, 
-    args.port1, args.weight1,args.optional)
+    commonq = Queue.Queue()
+    client = bfClient(commonq,args.localport, args.timeout, args.ipaddress1,
+            args.port1, args.weight1, args.optional)
     client.start()
     #Sender thread
     sendsocket = Common.SendSocket(args.timeout)
     sendsocket.start()
     #Reciever Thread
-    recieversocket = Common.RecieveSocket(args.localport)
+    recieversocket = Common.RecieveSocket(commonq,args.localport)
     recieversocket.start()
     #TODO
     # Add Support to capture ctrl-c events in thread
-    sendsocket.join()
 if __name__=="__main__":
     Common.initLogger(logging.DEBUG)
     main()

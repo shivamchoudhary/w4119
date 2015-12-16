@@ -7,8 +7,7 @@ import time
 import logging
 import Queue
 import datetime
-import pprint
-pp = pprint.PrettyPrinter(indent=2)
+
 def initLogger(level):
     #unified logging module for all the libraries in this folder!.
     logging.basicConfig(
@@ -97,40 +96,23 @@ class Table(object):
                 logging.debug("New Neighbour %s",destination)
                 Table.add_neighbour((metrics['ip'],metrics['port']),\
                         (recv_dvtable['link'],self_cost+metrics['cost']))
-            # adv_cost = float(metrics['cost'])
-            # if (self_cost + adv_cost < cur_cost):
-                    # Table.dvinfo['dvtable'][destination]['cost'] = \
-                        # self_cost+adv_cost
-                    # Table.dvinfo['dvtable'][destination]['link'] = \
-                        # recv_dvtable['link']
-            # logging.debug("New Neighbour %s",recv_dvtable['link'])
-            # Table.add_neighbour((metrics['ip'],metrics['port']),
-                    # (recv_dvtable['link'], metrics['cost']+self_cost))
-
-    # @staticmethod
-    # def show_neighbours():
-        # """
-        # Shows the current neighbours of the client.
-        # return: dvtable of neighbours.
-        # """
-        # return Table.information['dvtable']
-
+    
 class RecieveSocket(threading.Thread):
     """
     Primary work is to update the table with the information it recieves from 
     the sockets.
     """
-    def __init__(self, port):
+    def __init__(self, commonq,port):
         """
         The reciever does not require ip because its on localhost
         param:ip The IP address on which it is to be binded
         param:port Port number on which it is to be binded
         """
         super(RecieveSocket, self).__init__()
-        self.ip = '127.0.0.1'
-        self.port = port
-        self.lock = threading.Lock()
-        self._stop = threading.Event()
+        self.ip         = '127.0.0.1'
+        self.port       = port
+        self.lock       = threading.Lock()
+        self.commonq    = commonq
     def run(self):
         """
         Establish a listening port for the lifetime of the connection
@@ -141,7 +123,8 @@ class RecieveSocket(threading.Thread):
             s.bind((self.ip, self.port))
         except socket.error as e:
             logging.error("Error %s while binding", e)
-        logging.debug("Reciever binding on (%s,%s) complete", self.ip, self.port)
+        logging.debug("Reciever binding on (%s,%s) complete", self.ip, 
+                self.port)
         while True:
             msg, _, _  = select.select([s],[],[])
             if msg:
@@ -151,10 +134,6 @@ class RecieveSocket(threading.Thread):
                 self.lock.acquire()
                 Table.update(recv_data)
                 self.lock.release()
-            if self._stop.is_set():
-                print "Shutting Down the Client"
-                s.close()
-                return
             time.sleep(0.2)
 
 class SendSocket(threading.Thread):
