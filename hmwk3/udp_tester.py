@@ -30,7 +30,7 @@ class Handlers(object):
         cmd = self.q
         self.handlers[cmd.type](cmd)
     def _route_UPDATE(self, msg):
-        msg.data['type'] = "update"
+        msg.data['type'] = "ROUTE_UPDATE"
         data = json.dumps(msg.data)
         send(data)
 
@@ -54,8 +54,13 @@ message = {
                 "cost":10,
                 "ip":"128.59.196.2",
                 "port":4117,
+                },
+            '128.59.196.2:4119':{
+                "cost":10,
+                "ip":"128.59.196.2",
+                "port":4119,
                 }
+
             }
         }
 Handlers(Message(Message.ROUTE_UPDATE,message))
-# send()

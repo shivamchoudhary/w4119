@@ -7,7 +7,8 @@ import time
 import logging
 import Queue
 import datetime
-
+import pprint
+pp = pprint.PrettyPrinter(indent=1)
 def initLogger(level):
     #unified logging module for all the libraries in this folder!.
     logging.basicConfig(
@@ -62,12 +63,15 @@ class Table(object):
             Table.neighbourinfo['neighbours'][link]['link'] = link
             Table.neighbourinfo['neighbours'][link]['last_updated'] = \
                     time.time()
+            Table.neighbourinfo['neighbours'][link]['ip'] = ip
+            Table.neighbourinfo['neighbours'][link]['port'] = port
             Table.neighbourinfo['neighbours'][link]['active'] = True
     @staticmethod    
     def update(dict):
         """
         Extracts the IP and updates the last_updated variable for neighbour and
-        dvtable
+        dvtable. Also since this is an update message it restores the link as 
+        well. I think I am going to run into trouble for doing this.
         """
         ip = dict['ip']
         port = dict['port']
@@ -78,7 +82,8 @@ class Table(object):
         Table.neighbourinfo['neighbours'][link]['active'] = True
         Table.dvinfo['dvtable'][link]['cost'] = Table.neighbourinfo\
                 ['neighbours'][link]['cost']
-        Table.dvinfo['dvtable'][link]['link'] = Table.neighbourinfo['neighbours'][link]['link']
+        Table.dvinfo['dvtable'][link]['link'] = Table.neighbourinfo\
+                ['neighbours'][link]['link']
         logging.debug("Updating info for %s", link)
         Table.run_bellman(dict)
     
@@ -170,8 +175,27 @@ class SendSocket(threading.Thread):
                                 float("inf")
                         Table.dvinfo['dvtable'][link]['link']=newlink
                         Table.neighbourinfo['neighbours'][link]['active']=False
+            dvtable = {
+                    }
+            for link in Table.dvinfo['dvtable'].keys():
+                dvtable[link] = {}
+                dvtable[link]['cost'] = Table.dvinfo['dvtable'][link]['cost']
+                dvtable[link]['ip']  =Table.dvinfo['dvtable'][link]['ip']
+                dvtable[link]['port'] = Table.dvinfo['dvtable'][link]['port']
+            msg  = {
+                    'ip':Table.neighbourinfo['ip'],
+                    'port':Table.neighbourinfo['localport'],
+                    'link': Table.neighbourinfo['link'],
+                    'dvtable':dvtable
+                    }
+            # message = Handlers(Message(Message.ROUTE_UPDATE,msg))
+            for link in Table.neighbourinfo['neighbours'].keys():
+                ip = Table.neighbourinfo['neighbours'][link]['ip']
+                port = Table.neighbourinfo['neighbours'][link]['port']
+                Handlers(Message(Message.ROUTE_UPDATE,msg))
             self.lock.release()
-            time.sleep(0.2)
+
+            
     
 class Message(object):
     """ 
@@ -185,3 +209,23 @@ class Message(object):
         self.type = type
         self.data = data
 
+class Handlers(object):
+    def __init__(self,q):
+        self.handlers = {
+                Message.ROUTE_UPDATE:self._route_UPDATE
+                }
+        self.q = q
+        self.run()
+    def run(self):
+        cmd = self.q
+        self.handlers[cmd.type](cmd)
+    def _route_UPDATE(self, msg):
+        msg.data['type'] = "ROUTE_UPDATE"
+        data = json.dumps(msg.data)
+        send(data)
+
+def send(msg):
+    ip = "127.0.0.1"
+    port = 4116
+    sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+    sock.sendto(msg,(ip,port))
