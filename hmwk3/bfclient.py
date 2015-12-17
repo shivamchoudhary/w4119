@@ -134,12 +134,10 @@ class Cli(cmd.Cmd):
             cost    = v['cost']
             link    = v['link']
             if arg:
-                last_updated = datetime.datetime.fromtimestamp(
-                        v['last_updated']).strftime('%Y-%m-%d %H:%M:%S')
                 status = v['active']
                 print "Destination = {}, Cost = {},"\
-                        " Link = ({}), Last Updated = {}, Active = {}"\
-                        .format(dst, cost, link, last_updated, status)
+                        " Link = ({}), Active = {}"\
+                        .format(dst, cost, link, status)
             else: 
                 print "Destination = {}, Cost = {}, Link = ({})".format(
                         dst, cost, link)

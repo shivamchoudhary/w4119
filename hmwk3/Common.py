@@ -76,6 +76,9 @@ class Table(object):
         #update info wrt neigbour
         Table.neighbourinfo['neighbours'][link]['last_updated']= time.time()
         Table.neighbourinfo['neighbours'][link]['active'] = True
+        Table.dvinfo['dvtable'][link]['cost'] = Table.neighbourinfo\
+                ['neighbours'][link]['cost']
+        Table.dvinfo['dvtable'][link]['link'] = Table.neighbourinfo['neighbours'][link]['link']
         logging.debug("Updating info for %s", link)
         Table.run_bellman(dict)
     
@@ -88,6 +91,7 @@ class Table(object):
                 cur_cost = Table.dvinfo['dvtable'][destination]['cost']
                 adv_cost = float(metrics['cost'])
                 if (self_cost+adv_cost < cur_cost):
+                    logging.debug("Less Path Cost available updating")
                     Table.dvinfo['dvtable'][destination]['cost'] = self_cost+\
                             adv_cost
                     Table.dvinfo['dvtable'][destination]['link'] = \
@@ -160,20 +164,12 @@ class SendSocket(threading.Thread):
                 if Table.neighbourinfo['neighbours'][link]['active']:
                     if ((time.time()-Table.neighbourinfo['neighbours']\
                             [link]['last_updated'])> 3*self.timeout):
-                        Table.neighbourinfo['neighbours'][link]['active']=False
-                        Table.neighbourinfo['neighbours'][link]['cost']=\
+                        newlink = "Unknown"
+                        Table.dvinfo['dvtable'][link]['active']=False
+                        Table.dvinfo['dvtable'][link]['cost']=\
                                 float("inf")
-                        Table.dvinfo['dvtable'][link]['cost'] = float ("inf")
-                    dvtable = Table.dvinfo['dvtable']
-                    message = {
-                            'ip':Table.neighbourinfo['ip'],
-                            'port':Table.neighbourinfo['localport'],
-                            'link':Table.neighbourinfo['link'],
-                            'cost':Table.dvinfo['dvtable'][link]['cost'],
-                            'dvtable':dvtable
-                            }
-                    print message['dvtable']
-            
+                        Table.dvinfo['dvtable'][link]['link']=newlink
+                        Table.neighbourinfo['neighbours'][link]['active']=False
             self.lock.release()
             time.sleep(0.2)
     
