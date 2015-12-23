@@ -68,3 +68,5 @@ message = {
 2) Autocomplete the commands,provides rich help interface,seriously try it 
 3) Showneighbours : This command will show the neighbours and their current 
 status with last updated values.
+4) tailing the client.log (in the same folder) would give rich information about
+what is exactly going on in the network.
