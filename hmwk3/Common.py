@@ -188,11 +188,11 @@ class SendSocket(threading.Thread):
                     'link': Table.neighbourinfo['link'],
                     'dvtable':dvtable
                     }
-            # message = Handlers(Message(Message.ROUTE_UPDATE,msg))
             for link in Table.neighbourinfo['neighbours'].keys():
                 ip = Table.neighbourinfo['neighbours'][link]['ip']
                 port = Table.neighbourinfo['neighbours'][link]['port']
-                # Handlers(Message(Message.ROUTE_UPDATE,message))
+                message  = json.dumps(msg)
+                send(message, ip, int(port))
             self.lock.release()
 
             
@@ -210,24 +210,20 @@ class Message(object):
         self.data = data
 
 class Handlers(object):
-    def __init__(self,msg):
+    def __init__(self,q):
         self.handlers = {
                 Message.ROUTE_UPDATE:self._route_UPDATE
                 }
-        self.msg = msg
-        self.ip = "127.0.0.1"
-        self.port = int(4118)
+        self.q = q
         self.run()
     def run(self):
-        cmd = self.msg
+        cmd = self.q
         self.handlers[cmd.type](cmd)
-    def _route_UPDATE(self, msg):
+    def _route_UPDATE(self, (msg,ip,port)):
         msg.data['type'] = "ROUTE_UPDATE"
         data = json.dumps(msg.data)
-        send(data,self.ip,self.port)
+        send(data,ip,port)
 
-def send(msg,ip,port):
-    # ip = "127.0.0.1"
-    # port = 4116
+def send(msg, ip, port):
     sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     sock.sendto(msg,(ip,port))

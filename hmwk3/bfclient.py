@@ -94,7 +94,7 @@ class Cli(cmd.Cmd):
                         time.time()
                 Common.Table.neighbourinfo['neighbours'][link]['active']=False
             else:
-                print "The link %s is not your direct neighbour",link
+                print "The link {} is not your direct neighbour".format(link)
         except ValueError:
             print "Wrong Syntax use help <command> to find correct usage."
             self.cmdloop()
@@ -109,7 +109,7 @@ class Cli(cmd.Cmd):
             (ip, port) = line.split(" ")
             link = ip+":"+port
             if link not in Common.Table.neighbourinfo['neighbours'].keys():
-                print " Can't do linkup %s is not your neighbour",link
+                print " Can't do linkup {} is not your neighbour".format(link)
             else:
                 cost = Common.Table.neighbourinfo['neighbours'][link]['cost']
                 oldlink = Common.Table.neighbourinfo['neighbours'][link]['link']
