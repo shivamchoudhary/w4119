@@ -83,7 +83,7 @@ class Cli(cmd.Cmd):
         Sets link distance to "inf"
         """
         try:
-            (ip, port) = line.split(" ")
+            (ip , port) = line.split(" ")
             link = ip+":"+port
             if link in Common.Table.neighbourinfo['neighbours'].keys():
                 newlink = "Unknown"
@@ -106,13 +106,16 @@ class Cli(cmd.Cmd):
     
     def do_linkup(self, line):
         try:
-            (ip,port) = line.split(" ")
+            (ip, port) = line.split(" ")
             link = ip+":"+port
             if link not in Common.Table.neighbourinfo['neighbours'].keys():
-                print "%s your neighbour",link
+                print " Can't do linkup %s is not your neighbour",link
             else:
                 cost = Common.Table.neighbourinfo['neighbours'][link]['cost']
                 oldlink = Common.Table.neighbourinfo['neighbours'][link]['link']
+                Common.Table.neighbourinfo['neighbours'][link]['active']=True
+                Common.Table.neighbourinfo['neighbours'][link]['last_updated']\
+                        =time.time()
                 Common.Table.dvinfo['dvtable'][link]['cost'] = cost
                 Common.Table.dvinfo['dvtable'][link]['link'] = oldlink
                 logging.debug("Restoring cost %s for %s",cost,link )
@@ -172,12 +175,10 @@ class Cli(cmd.Cmd):
     
     def default(self, line):
         print "Command Not recognized,try help or press <tab>"
+    
     def emptyline(self):
         pass
-    # def do_help(self, args):
-        # pass
 
-        # cmd.Cmd.do_help(self, args)
     def help_help(self):
         print "Syntax: help"
         print "Well it doesn't make sense to ask for help on help,Inception Maybe!!"

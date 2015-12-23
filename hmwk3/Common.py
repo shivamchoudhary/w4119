@@ -9,6 +9,7 @@ import Queue
 import datetime
 import pprint
 pp = pprint.PrettyPrinter(indent=1)
+
 def initLogger(level):
     #unified logging module for all the libraries in this folder!.
     logging.basicConfig(
@@ -159,7 +160,6 @@ class SendSocket(threading.Thread):
         self._dvchanged     = threading.Event() #event dv has changed
         self.stoprequest    = threading.Event()
         self.lock           = threading.Lock()
-        logging.debug("Initializing sender socket on (%s:%s)")
     def run(self):
         while not self._dvchanged.wait(timeout=self.timeout):
             logging.debug('Self timeout (%s) sending route updates',
@@ -192,7 +192,7 @@ class SendSocket(threading.Thread):
             for link in Table.neighbourinfo['neighbours'].keys():
                 ip = Table.neighbourinfo['neighbours'][link]['ip']
                 port = Table.neighbourinfo['neighbours'][link]['port']
-                Handlers(Message(Message.ROUTE_UPDATE,msg),ip,port)
+                # Handlers(Message(Message.ROUTE_UPDATE,message))
             self.lock.release()
 
             
@@ -205,21 +205,21 @@ class Message(object):
     LINK_DOWN       :(ip,port)
     """
     ROUTE_UPDATE,LINK_UP,LINK_DOWN,CLOSE = range(4)
-    def __init__(self,type,data=None):
+    def __init__(self, type, data=None):
         self.type = type
         self.data = data
 
 class Handlers(object):
-    def __init__(self,q,ip,port):
+    def __init__(self,msg):
         self.handlers = {
                 Message.ROUTE_UPDATE:self._route_UPDATE
                 }
-        self.q = q
-        self.ip = ip
-        self.port = int(port)
+        self.msg = msg
+        self.ip = "127.0.0.1"
+        self.port = int(4118)
         self.run()
     def run(self):
-        cmd = self.q
+        cmd = self.msg
         self.handlers[cmd.type](cmd)
     def _route_UPDATE(self, msg):
         msg.data['type'] = "ROUTE_UPDATE"
