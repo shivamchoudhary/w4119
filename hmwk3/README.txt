@@ -1,18 +1,25 @@
 Distributed Bellman-Ford
+*How to Run:-
+- make bfclient1 
+- make bfclient2
+in two separate terminals would load the scenario as given in the specifications.
+
+* Supported Commands:-
+All commands specified are supported,alogwith the following extra commands:-
+- showneighbours: This command will show the neighbours of the current client alongwith the last_updated values.
 
 *Project Documentation:-
 Makefile:- The included makefile can provide direct command line interface to 
-run the program directly. Run make bfclient to run the client with 1 neighbour
-bfclient
-*bfclient Architecture :
-Initialize Routing Table -- Thread 1
-Start recieving thread  -- Thread 2    \
-                                        Use some kind of sync mechanism.
-Start dv sending thread -- Thread 3    / 
+run the program directly as specified in the How to Run section.
+Common.py :- Contains all the Common Functions like Sender Socket and Receiver
+Socket
+*Desgined Protocol Structure: I use a json based protocol which has a key 'type',
+        which specifies the type of message. ROUTE_UPDATE,CLOSE can be the type
+        of messages being sent to the other recievers. Alongwith that,the 
+        sends sends the current Distance Vectors to the other neighbours.
 
-
-*Program Features:-
-
+- Has Autocomplete. If a partial command like sh is typed it will try to auto-
+complete it for you.
 *Usage Scenarios:-
 
 *Protocol Specification:-
